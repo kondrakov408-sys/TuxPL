@@ -31,6 +31,12 @@ static void prog_push(Program *p, Opcode op, int64_t arg) {
     }
     p->cmds[p->len].op = op;
     p->cmds[p->len].arg = arg;
+    int tag = 0;
+    if (arg >= -128 && arg <= 127) tag = 0;
+    else if (arg >= -32768 && arg <= 32767) tag = 1;
+    else if (arg >= -2147483648LL && arg <= 2147483647LL) tag = 2;
+    else tag = 3;
+    p->cmds[p->len].type_tag = tag;
     p->len++;
 }
 
@@ -84,6 +90,23 @@ static Word parse_word(const char *s, size_t n, size_t *i) {
         }
     }
     if (over) troll_die(TR_OVERFLOW);
+
+    if (nU > 2) {
+        if (w.op == OP_LOADIND) {
+            w.op = OP_REGGET;
+        } else if (w.op == OP_STOREIND) {
+            w.op = OP_REGSET;
+        } else if (w.op == OP_LISTNEW && nU >= 7) {
+            if (w.arg == 100) w.op = OP_FISH;
+            else if (w.arg == 101) w.op = OP_CRAZY;
+            else if (w.arg == 102) w.op = OP_DIR;
+            else if (w.arg >= 103 && w.arg <= 106) {
+                int cast_tag = (int)(w.arg - 103);
+                w.op = OP_CAST;
+                w.arg = cast_tag;
+            }
+        }
+    }
 
     w.nU = nU;
     *i = j;
@@ -149,6 +172,7 @@ void parse_source(const char *src, Program *prog) {
     prog->cmds = NULL;
     prog->len = 0;
     prog->cap = 0;
+    prog->is_purgatory = 0;
     if (*src == '\0') troll_die(TR_EMPTYFILE);
 
     const char *p = src;
@@ -201,6 +225,12 @@ static const char *op_to_tux_lib(Opcode op) {
     case OP_LISTLEN:   return "tUuX";
     case OP_PRINTNUM:  return "tUUx";
     case OP_INPUTNUM:  return "tUUX";
+    case OP_REGGET:    return "TuUX";
+    case OP_REGSET:    return "TUux";
+    case OP_FISH:      return "tuux";
+    case OP_CRAZY:     return "tuux";
+    case OP_CAST:      return "tuux";
+    case OP_DIR:       return "tuux";
     default:           return "TuX";
     }
 }
@@ -209,6 +239,7 @@ void parse_source_cursed(const char *src, Program *prog) {
     prog->cmds = NULL;
     prog->len = 0;
     prog->cap = 0;
+    prog->is_purgatory = 0;
     if (*src == '\0') troll_die(TR_EMPTYFILE);
 
     static char licensed[512][64];
@@ -255,6 +286,9 @@ void parse_source_cursed(const char *src, Program *prog) {
                     licensed[num_licensed][63] = '\0';
                     num_licensed++;
                 }
+                if (strcmp(lib_name, "TuuuuuuuuX") == 0) {
+                    prog->is_purgatory = 1;
+                }
                 p = eol ? eol + 1 : p + llen;
                 continue;
             } else {
@@ -291,6 +325,16 @@ void parse_source_cursed(const char *src, Program *prog) {
             }
 
             /* Body line format: {:[~'Tux'~] (cmd1)  (cmd2) ... :C;!?} */
+            if (prog->is_purgatory) {
+                size_t ws_count = 0;
+                for (size_t wi = 0; wi < llen; wi++) {
+                    if (p[wi] == ' ' || p[wi] == '\t') ws_count++;
+                }
+                if ((ws_count % 2) != (size_t)(line_idx % 2)) {
+                    troll_die(TR_WHITESPACE_TAMPERED);
+                }
+            }
+
             int target_count = ((line_idx - 1) % 5) + 1; /* cycle 1, 2, 3, 4, 5 */
 
             static const char pfx[] = "{:[~'Tux'~] ";
@@ -337,7 +381,14 @@ void parse_source_cursed(const char *src, Program *prog) {
                     char actual_c = p[i];
                     if (actual_c != expected_c) troll_die(TR_CURSED_CHECKSUM);
                     i++;
-                    if (i + 4 != llen || strncmp(p + i, ";!?}", 4) != 0) {
+                    if (i + 4 > llen || strncmp(p + i, ";!?}", 4) != 0) {
+                        troll_die(TR_CURSED_SYNTAX);
+                    }
+                    i += 4;
+                    if (prog->is_purgatory) {
+                        while (i < llen && (p[i] == ' ' || p[i] == '\t')) i++;
+                    }
+                    if (i != llen) {
                         troll_die(TR_CURSED_SYNTAX);
                     }
                     break;

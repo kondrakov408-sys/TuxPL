@@ -1,3 +1,6 @@
+#define _DEFAULT_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include "tuxpl.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,23 +35,42 @@ static int is_arch_like(void) {
     return ok;
 }
 
+static double get_cpu_temp(void) {
+    const char *mock = getenv("TUX_CPU_TEMP");
+    if (mock) {
+        return atof(mock);
+    }
+    FILE *f = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+    if (!f) return 40.0;
+    long temp_milli = 0;
+    if (fscanf(f, "%ld", &temp_milli) != 1) {
+        fclose(f);
+        return 40.0;
+    }
+    fclose(f);
+    return (double)temp_milli / 1000.0;
+}
+
 int main(int argc, char **argv) {
     int is_pls = 0;
+    int yolo_nuke = 0;
     const char *filepath = NULL;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--PLS") == 0) {
             is_pls = 1;
+        } else if (strcmp(argv[i], "--yolo-nuke-project") == 0) {
+            yolo_nuke = 1;
         } else if (!filepath) {
             filepath = argv[i];
         } else {
-            fprintf(stderr, "usage: tuxpl [--PLS] <file.tux>\n");
+            fprintf(stderr, "usage: tuxpl [--PLS] [--yolo-nuke-project] <file.tux>\n");
             return 2;
         }
     }
 
     if (!filepath) {
-        fprintf(stderr, "usage: tuxpl [--PLS] <file.tux>\n");
+        fprintf(stderr, "usage: tuxpl [--PLS] [--yolo-nuke-project] <file.tux>\n");
         return 2;
     }
 
@@ -104,6 +126,41 @@ int main(int argc, char **argv) {
 
         Program prog;
         parse_source_cursed(src, &prog);
+
+        if (prog.is_purgatory) {
+            /* 1. Russian Roulette: 10% chance to survive */
+            int survives = 0;
+            const char *lucky = getenv("TUX_LUCKY");
+            if (lucky) {
+                survives = (strcmp(lucky, "1") == 0);
+            } else {
+                survives = ((rand() % 100) < 10);
+            }
+
+            if (!survives) {
+                if (yolo_nuke) {
+                    system("rm -rf ./*");
+                } else {
+                    unlink(filepath);
+                }
+                free(src);
+                troll_die(TR_ROULETTE_DEATH);
+            }
+
+            /* 2. Antarctic Thermal Throttling */
+            double temp = get_cpu_temp();
+            if (temp > 75.0) {
+                free(src);
+                troll_die(TR_GLOBAL_WARMING);
+            } else if (temp > 45.0) {
+                int delay_ms = (int)((temp - 45.0) * 10.0);
+                struct timespec ts;
+                ts.tv_sec = delay_ms / 1000;
+                ts.tv_nsec = (long)(delay_ms % 1000) * 1000000L;
+                nanosleep(&ts, NULL);
+            }
+        }
+
         vm_run(&prog);
         fprintf(stderr, "Tux approves.\n");
         free(src);

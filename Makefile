@@ -9,8 +9,13 @@ tuxpl: $(SRC) $(HDR)
 
 test: tuxpl
 	sh tests/run.sh
+	sh tests/test_cursed.sh
+	sh tests/test_hardcore.sh
+
+test-hardcore: tuxpl
+	sh tests/test_hardcore.sh
 
 clean:
 	rm -f tuxpl
 
-.PHONY: test clean
+.PHONY: test test-hardcore clean

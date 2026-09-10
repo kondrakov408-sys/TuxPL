@@ -139,6 +139,48 @@ static const char *const M_MATH_DEATH[] = {
     "Провал экзамена на знание классического режима. Файл стёрт из истории."
 };
 
+static const char *const M_ROULETTE_DEATH[] = {
+    "РУССКАЯ РУЛЕТКА: Туксу не понравилась твоя рожа (шанс 90%). Файл уничтожен!",
+    "Пингвин взглянул на код, вздохнул и нажал спуск. Твой файл стёрт из реальности.",
+    "10% шанс на спасение не выпал. Тукс сбросил твой исходник в океан."
+};
+
+static const char *const M_GLOBAL_WARMING[] = {
+    "ПРОЦЕССОР ПЕРЕГРЕЛСЯ! Льдина растаяла от адского жара. Тукс эвакуирован.",
+    "Температура чипа превысила арктический лимит! Спасайте пингвинов, глушите вычисления.",
+    "Глобальное потепление настигло твою программу. Процессор кипит, Тукс в ярости."
+};
+
+static const char *const M_STARVATION[] = {
+    "НАЛОГ НА РЫБУ НЕ УПЛАЧЕН! У Тукса кончилась рыба. Без еды пингвины не вычисляют.",
+    "Тукс упал в голодный обморок. Выделенная рыба исчерпана до нуля.",
+    "Рыбный баланс пуст. Память разложилась на селёдочные скелеты."
+};
+
+static const char *const M_AVALANCHE[] = {
+    "СХОД ЛАВИНЫ! Ты построил башню выше 7 элементов без снятия. Стек обрушился!",
+    "Гравитация безжалостна. Слишком много тарелок в стеке — всё рухнуло и разбилось.",
+    "Башня стека накренилась и раздавила Тукса. Стек перемешан и уничтожен."
+};
+
+static const char *const M_USE_AFTER_MOVE[] = {
+    "BORROW CHECKER: Попытка прочитать перемещённое значение! Use-After-Move запрещён каноном Rust.",
+    "Переменная была перемещена на стек и теперь содержит надгробие. Тукс чтит память умерших данных.",
+    "Нарушение владения ресурсом! Значение уже отдано другому. Клонируй или страдай."
+};
+
+static const char *const M_TYPE_MISMATCH[] = {
+    "НЕСОВПАДЕНИЕ ТИПОВ! Попытка сложить разные разрядности без явного кастинга.",
+    "Строгая типизация степеней двойки отвергла операцию. i8 не смешивается с i64 без лицензии.",
+    "Тукс требует явного приведения типов! Не пытайся совать разные разрядности в один опкод."
+};
+
+static const char *const M_WHITESPACE_TAMPERED[] = {
+    "НЕВИДИМАЯ МАТРИЦА WHITESPACE ПОВРЕЖДЕНА! Поток пробелов не сошёлся с хэшем команд.",
+    "Скрытый слой Whitespace отверг твою программу. Пробелы расставлены не по фен-шую.",
+    "Контрольная сумма невидимых символов нарушена. Тукс видит фальсификацию отступов."
+};
+
 typedef struct {
     const char *const *m;
     int n;
@@ -146,29 +188,36 @@ typedef struct {
 
 void troll_die(int cat) {
     static const Pool pools[TR_CAT_COUNT] = {
-        [TR_GARBAGE]          = {M_GARBAGE,          5},
-        [TR_OPEN]             = {M_OPEN,             4},
-        [TR_SPACE1]           = {M_SPACE1,           3},
-        [TR_SEP]              = {M_SEP,              4},
-        [TR_END]              = {M_END,              4},
-        [TR_SIX]              = {M_SIX,              4},
-        [TR_EMPTYLINE]        = {M_EMPTYLINE,        2},
-        [TR_EMPTYFILE]        = {M_EMPTYFILE,        2},
-        [TR_OVERFLOW]         = {M_OVERFLOW,         2},
-        [TR_STACK]            = {M_STACK,            3},
-        [TR_DIVZERO]          = {M_DIVZERO,          2},
-        [TR_MEMRANGE]         = {M_MEMRANGE,         3},
-        [TR_LISTRANGE]        = {M_LISTRANGE,        2},
-        [TR_BADJUMP]          = {M_BADJUMP,          2},
-        [TR_BADINPUT]         = {M_BADINPUT,         2},
-        [TR_CURSED_NAME]       = {M_CURSED_NAME,       3},
-        [TR_CURSED_WEEKEND]    = {M_CURSED_WEEKEND,    3},
-        [TR_CURSED_NON_ARCH]   = {M_CURSED_NON_ARCH,   3},
-        [TR_CURSED_NO_LIB]     = {M_CURSED_NO_LIB,     3},
-        [TR_CURSED_LINE_CYCLE] = {M_CURSED_LINE_CYCLE, 3},
-        [TR_CURSED_SYNTAX]     = {M_CURSED_SYNTAX,     3},
-        [TR_CURSED_CHECKSUM]   = {M_CURSED_CHECKSUM,   3},
-        [TR_MATH_DEATH]        = {M_MATH_DEATH,        3}
+        [TR_GARBAGE]              = {M_GARBAGE,              5},
+        [TR_OPEN]                 = {M_OPEN,                 4},
+        [TR_SPACE1]               = {M_SPACE1,               3},
+        [TR_SEP]                  = {M_SEP,                  4},
+        [TR_END]                  = {M_END,                  4},
+        [TR_SIX]                  = {M_SIX,                  4},
+        [TR_EMPTYLINE]            = {M_EMPTYLINE,            2},
+        [TR_EMPTYFILE]            = {M_EMPTYFILE,            2},
+        [TR_OVERFLOW]             = {M_OVERFLOW,             2},
+        [TR_STACK]                = {M_STACK,                3},
+        [TR_DIVZERO]              = {M_DIVZERO,              2},
+        [TR_MEMRANGE]             = {M_MEMRANGE,             3},
+        [TR_LISTRANGE]            = {M_LISTRANGE,            2},
+        [TR_BADJUMP]              = {M_BADJUMP,              2},
+        [TR_BADINPUT]             = {M_BADINPUT,             2},
+        [TR_CURSED_NAME]           = {M_CURSED_NAME,           3},
+        [TR_CURSED_WEEKEND]        = {M_CURSED_WEEKEND,        3},
+        [TR_CURSED_NON_ARCH]       = {M_CURSED_NON_ARCH,       3},
+        [TR_CURSED_NO_LIB]         = {M_CURSED_NO_LIB,         3},
+        [TR_CURSED_LINE_CYCLE]     = {M_CURSED_LINE_CYCLE,     3},
+        [TR_CURSED_SYNTAX]         = {M_CURSED_SYNTAX,         3},
+        [TR_CURSED_CHECKSUM]       = {M_CURSED_CHECKSUM,       3},
+        [TR_MATH_DEATH]            = {M_MATH_DEATH,            3},
+        [TR_ROULETTE_DEATH]        = {M_ROULETTE_DEATH,        3},
+        [TR_GLOBAL_WARMING]        = {M_GLOBAL_WARMING,        3},
+        [TR_STARVATION]            = {M_STARVATION,            3},
+        [TR_AVALANCHE]             = {M_AVALANCHE,             3},
+        [TR_USE_AFTER_MOVE]        = {M_USE_AFTER_MOVE,        3},
+        [TR_TYPE_MISMATCH]         = {M_TYPE_MISMATCH,         3},
+        [TR_WHITESPACE_TAMPERED]    = {M_WHITESPACE_TAMPERED,    3}
     };
     const Pool *p = &pools[cat];
     fprintf(stderr, "TuxPL: %s\n", p->m[rand() % p->n]);

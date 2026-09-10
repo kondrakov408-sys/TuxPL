@@ -10,18 +10,21 @@ typedef enum {
     OP_PUSH, OP_LOAD, OP_STORE, OP_LOADIND, OP_STOREIND,
     OP_JMP, OP_JZ, OP_JNZ, OP_CMP,
     OP_LISTNEW, OP_LISTPUSH, OP_LISTGET, OP_LISTSET, OP_LISTLEN,
-    OP_PRINTNUM, OP_INPUTNUM
+    OP_PRINTNUM, OP_INPUTNUM,
+    OP_REGGET, OP_REGSET, OP_FISH, OP_CRAZY, OP_CAST, OP_DIR
 } Opcode;
 
 typedef struct {
     Opcode op;
     int64_t arg;
+    int type_tag; /* 0: i8, 1: i16, 2: i32, 3: i64 */
 } Cmd;
 
 typedef struct {
     Cmd *cmds;
     size_t len;
     size_t cap;
+    int is_purgatory;
 } Program;
 
 /* troll.c — категории ошибок. Каждая — отдельный пул сообщений. */
@@ -49,6 +52,13 @@ enum {
     TR_CURSED_SYNTAX,     /* нарушение синтаксиса скобок/символов */
     TR_CURSED_CHECKSUM,   /* неверная контрольная буква T/U/X */
     TR_MATH_DEATH,        /* провал математического теста при --PLS */
+    TR_ROULETTE_DEATH,    /* 90% шанс: Туксу не понравился код */
+    TR_GLOBAL_WARMING,    /* процессор перегрелся: льдина растаяла */
+    TR_STARVATION,        /* у Тукса кончилась рыба */
+    TR_AVALANCHE,         /* стек рухнул от гравитации (>7) */
+    TR_USE_AFTER_MOVE,    /* чтение перемещенного значения (Borrow Checker) */
+    TR_TYPE_MISMATCH,     /* несовпадение строгих типов */
+    TR_WHITESPACE_TAMPERED,/* нарушение невидимой whitespace-сигнатуры */
     TR_CAT_COUNT
 };
 

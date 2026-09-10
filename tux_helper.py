@@ -40,6 +40,22 @@ def word(op, arg=0):
     op = op.upper()
     if op in BANK_A:
         return BANK_A[op][0]
+    if op == "REGGET":
+        b = f"{arg & 3:02b}".replace("0", "u").replace("1", "U")
+        return "TuU" + b + "X"
+    if op == "REGSET":
+        b = f"{arg & 3:02b}".replace("0", "u").replace("1", "U")
+        return "TUu" + b + "x"
+    if op == "FISH":
+        return "tuuUUuuUuux"
+    if op == "CRAZY":
+        return "tuuUUuuUuUx"
+    if op == "DIR":
+        return "tuuUUuuUUux"
+    if op == "CAST":
+        code = 103 + (arg & 3)
+        b = bin(code)[2:].replace("0", "u").replace("1", "U")
+        return "tuu" + b + "x"
     if op in BANK_B:
         prefix, suffix, _ = BANK_B[op]
         return prefix + to_bits(arg) + suffix
@@ -93,16 +109,21 @@ def compile_commands(cmds):
         lines.append(line)
     return "\n".join(lines)
 
-def compile_cursed(cmds):
+def compile_cursed(cmds, is_purgatory=False):
     """
-    Адская компиляция (Cursed Mode):
-    - Подключение 150+ библиотек из Tux/
+    Адская компиляция (Cursed Mode / Purgatory Mode):
+    - Подключение библиотек из Tux/
+    - Обязательный импорт TuuuuuuuuX для Purgatory
     - Сакральная C-образная обвязка со всеми символами
     - Динамический цикл 1-2-3-4-5
     - Контрольная буква T/U/X в конце каждой строки
+    - Валидация Whitespace Parity (в Purgatory Mode)
     """
     words = []
     needed_libs = {"TuuuX", "TuuuuX"}
+    if is_purgatory:
+        needed_libs.add("TuuuuuuuuX")
+
     for item in cmds:
         if isinstance(item, tuple) or isinstance(item, list):
             op_name, arg = item[0], item[1]
@@ -114,6 +135,12 @@ def compile_cursed(cmds):
         op_up = op_name.upper()
         if op_up in BANK_A:
             needed_libs.add(BANK_A[op_up][0])
+        elif op_up == "REGGET":
+            needed_libs.add("TuUX")
+        elif op_up == "REGSET":
+            needed_libs.add("TUux")
+        elif op_up in ("FISH", "CRAZY", "DIR", "CAST"):
+            needed_libs.add("tuux")
         elif op_up in BANK_B:
             needed_libs.add(BANK_B[op_up][0] + "X" if BANK_B[op_up][1] == "X" else BANK_B[op_up][0] + "x")
 
@@ -145,6 +172,10 @@ def compile_cursed(cmds):
         full_pfx = pfx + body
         chk = calc_tux_checksum(len(full_pfx.encode('utf-8')) * 8)
         line = f"{full_pfx}:{chk};!?}}"
+        if is_purgatory:
+            ws_count = sum(1 for c in line if c in " \t")
+            if (ws_count % 2) != (line_idx % 2):
+                line += " "
         lines_body.append(line)
         line_idx += 1
 
@@ -175,8 +206,23 @@ def make_cursed_text(text):
         cmds.append(("PRINT_CHAR", 0))
     return compile_cursed(cmds)
 
+def make_purgatory_text(text):
+    cmds = []
+    for char in text:
+        cmds.append(("PUSH", ord(char)))
+        cmds.append(("PRINT_CHAR", 0))
+    return compile_cursed(cmds, is_purgatory=True)
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "cursed":
+    if len(sys.argv) > 1 and sys.argv[1] == "purgatory":
+        msg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Hi"
+        fname, code = make_purgatory_text(msg)
+        print(f"# Сгенерирован Purgatory TuxPL файл: {fname}")
+        with open(fname, "w") as f:
+            f.write(code)
+        print(f"# Сохранено в {fname} (размер: {len(code)} байт = {len(code)*8} бит)")
+        print(code)
+    elif len(sys.argv) > 1 and sys.argv[1] == "cursed":
         msg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Hi"
         fname, code = make_cursed_text(msg)
         print(f"# Сгенерирован Cursed TuxPL файл: {fname}")
@@ -195,6 +241,7 @@ if __name__ == "__main__":
         print(f"{op} {arg}  -->  {w}  (U-букв: {count_u(w)}, разделитель: {repr(sep(w))})")
     else:
         print("Использование:")
+        print("  python3 tux_helper.py purgatory \"Hi\"  # создать файл режима Purgatory")
         print("  python3 tux_helper.py cursed \"Hi\"     # создать адский <bits>.tux файл")
         print("  python3 tux_helper.py word PUSH 42    # узнать слово TuxPL для PUSH 42")
         print("  python3 tux_helper.py text \"Hello!\"   # классический код для --PLS")
