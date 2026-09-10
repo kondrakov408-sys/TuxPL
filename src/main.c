@@ -91,6 +91,8 @@ int main(int argc, char **argv) {
             config.is_trace = 1;
         } else if (strcmp(argv[i], "--TRACE-STATE") == 0) {
             config.is_trace_state = 1;
+        } else if (strcmp(argv[i], "--gbsv") == 0) {
+            config.is_gbsv = 1;
         } else if (strcmp(argv[i], "--yolo-nuke-project") == 0) {
             config.yolo_nuke = 1;
         } else if (strcmp(argv[i], "--companion") == 0) {
@@ -180,6 +182,8 @@ int main(int argc, char **argv) {
         }
 
         Program prog;
+        memset(&prog, 0, sizeof(prog));
+        prog.is_gbsv = config.is_gbsv;
         if (src[0] == '{' && src[1] == ':') {
             parse_source(src, &prog);
         } else {

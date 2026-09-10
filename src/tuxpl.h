@@ -164,6 +164,7 @@ typedef struct {
     size_t cap;
     int is_purgatory;
     int is_apocalypse;
+    int is_gbsv;
     char companion_name[64];
     int has_companion;
     ProgramFingerprint fp;
@@ -183,6 +184,7 @@ typedef struct {
     int is_disasm;
     int is_trace;
     int is_trace_state;
+    int is_gbsv;
     int yolo_nuke;
     const char *filepath;
     const char *companion_path;
@@ -231,6 +233,12 @@ enum {
     TR_NO_HISTORY,
     TR_DORMANT,
     TR_EXECUTION,
+    /* GBSV категории */
+    TR_GBSV_SYNTAX,
+    TR_GBSV_B64,
+    TR_GBSV_GF,
+    TR_GBSV_TUX,
+    TR_GBSV_ZETA,
     TR_CAT_COUNT
 };
 
