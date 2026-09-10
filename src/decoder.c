@@ -45,7 +45,8 @@ DecodedInstruction decode_instruction(
         program_key ^ genome->chromosomes[0] ^ entropy_pool,
         (uint64_t)pc ^ (uint64_t)regs[0]
     );
-    uint64_t shift = is_apocalypse ? ((ctx_mix + (uint64_t)cell->gen) % TUX_NUM_OPCODES) : 0;
+    int apply_shift = is_apocalypse && ((cell->flags & TUX_FLAG_MUTATED) || (cell->type_tag != TUX_TYPE_OPCODE) || (cell->gen > 0));
+    uint64_t shift = apply_shift ? ((ctx_mix + (uint64_t)cell->gen) % TUX_NUM_OPCODES) : 0;
 
     /* 6. Возрастные домены декодирования опкода */
     uint64_t raw_op = 0;

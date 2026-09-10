@@ -336,21 +336,28 @@ static void run_cursed(const Program *prog) {
             if (is_purg) consecutive_pushes = 0;
             break;
         }
-        case OP_REGGET:
-            vec_push(&stack, regs[c->arg % 4]);
-            vec_push(&stack_tags, reg_tags[c->arg % 4]);
+        case OP_REGGET: {
+            size_t ridx = (size_t)(((c->arg % 4) + 4) % 4);
+            vec_push(&stack, regs[ridx]);
+            vec_push(&stack_tags, reg_tags[ridx]);
             if (is_purg) {
                 consecutive_pushes++;
                 if (consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             }
             break;
-        case OP_REGSET:
-            regs[c->arg % 4] = spop_tag(&stack, &stack_tags, &reg_tags[c->arg % 4]);
+        }
+        case OP_REGSET: {
+            size_t ridx = (size_t)(((c->arg % 4) + 4) % 4);
+            regs[ridx] = spop_tag(&stack, &stack_tags, &reg_tags[ridx]);
             if (is_purg) consecutive_pushes = 0;
             break;
-        case OP_FISH:
-            fish_grams += (c->arg > 0 ? (int)c->arg : 50);
+        }
+        case OP_FISH: {
+            int add = (c->arg > 0 && c->arg <= 10000) ? (int)c->arg : 50;
+            fish_grams += add;
+            if (fish_grams > 100000) fish_grams = 100000;
             break;
+        }
         case OP_CRAZY: {
             static const int crazy[3][3] = {
                 {1, 0, 0},
@@ -378,7 +385,7 @@ static void run_cursed(const Program *prog) {
             }
             break;
         case OP_DIR:
-            dir = (int)(c->arg % 4);
+            dir = (int)(((c->arg % 4) + 4) % 4);
             break;
         case OP_INPUTNUM: {
             vec_fit(&vars, (size_t)c->arg + 1);
@@ -509,6 +516,9 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
     TuxContext ctxB;
     memset(&ctxB, 0, sizeof(ctxB));
     ctxB.pc_code = (uint16_t)((program_key ^ genome.chromosomes[1]) % TUX_MEM_SIZE);
+    if (ctxB.pc_code < prog->len && prog->len < TUX_MEM_SIZE) {
+        ctxB.pc_code = (uint16_t)(prog->len + (ctxB.pc_code % (TUX_MEM_SIZE - prog->len)));
+    }
     ctxB.pc_data = (uint16_t)((ctxB.pc_code + 512 + (genome.chromosomes[2] % 1024)) % TUX_MEM_SIZE);
     if (ctxB.pc_data == ctxB.pc_code) ctxB.pc_data = (ctxB.pc_data + 1) % TUX_MEM_SIZE;
     if (has_companion_data) {
@@ -583,15 +593,79 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         int is_branch_taken = 0;
         int64_t last_exec_result = 0;
 
+        /* Защита конкурирующего контекста TUX_B от краша в неинициализированной памяти */
+        if (act == &ctxB) {
+            int needed_stack = 0;
+            switch (inst.op) {
+            case OP_ADD: case OP_SUB: case OP_MUL: case OP_DIV:
+            case OP_SWAP: case OP_STOREIND: case OP_CMP:
+            case OP_CRAZY: case OP_CLONE: case OP_LISTSET:
+                needed_stack = 2;
+                break;
+            case OP_STORE: case OP_LOADIND: case OP_POP:
+            case OP_PRINTCHAR: case OP_PRINTNUM: case OP_REGSET:
+            case OP_SET_PC: case OP_ADD_PC: case OP_XOR_PC:
+            case OP_DECAY: case OP_WAKE: case OP_DUP:
+            case OP_JZ: case OP_JNZ: case OP_LISTPUSH: case OP_LISTGET:
+                needed_stack = 1;
+                break;
+            default:
+                needed_stack = 0;
+                break;
+            }
+            if (act->stack.n < (size_t)needed_stack) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op == OP_DIV && act->stack.n >= 2 && act->stack.d[act->stack.n - 1] == 0) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op >= OP_LISTNEW && inst.op <= OP_LISTLEN) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op == OP_INPUTNUM || inst.op == OP_PRINTCHAR || inst.op == OP_PRINTNUM) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op == OP_LOAD || inst.op == OP_STORE) {
+                if (inst.arg < 0 || inst.arg >= 64 || (inst.op == OP_LOAD && !var_owned[inst.arg])) {
+                    inst.op = OP_NOP;
+                }
+            }
+            if (inst.op == OP_LOADIND && act->stack.n >= 1) {
+                int64_t addr = act->stack.d[act->stack.n - 1];
+                if (addr < 0 || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+            }
+            if (inst.op == OP_STOREIND && act->stack.n >= 2) {
+                int64_t addr = act->stack.d[act->stack.n - 2];
+                if (addr < (int64_t)prog->len || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+            }
+            if (inst.op == OP_DECAY && act->stack.n >= 1) {
+                int64_t addr = act->stack.d[act->stack.n - 1];
+                if (addr < (int64_t)prog->len || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+            }
+            if (inst.op == OP_CLONE && act->stack.n >= 2) {
+                int64_t dst = act->stack.d[act->stack.n - 1];
+                if (dst < (int64_t)prog->len || dst >= TUX_MEM_SIZE) inst.op = OP_NOP;
+            }
+            if (inst.op == OP_UNDO && (!config->is_reversible || hist.count == 0)) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op == OP_PUSH && act->consecutive_pushes >= 7) {
+                inst.op = OP_NOP;
+            }
+            if (inst.op == OP_PAY_TIME && fish_grams < 10) {
+                inst.op = OP_NOP;
+            }
+        }
+
         switch (inst.op) {
         case OP_PUSH:
             vec_push(&act->stack, inst.arg);
             vec_push(&act->stack_tags, fetched->type_tag);
             act->consecutive_pushes++;
-            if (act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         case OP_LOAD:
-            if (inst.arg >= 0 && inst.arg < 64) {
+            if (act == &ctxA && inst.arg >= 0 && inst.arg < 64) {
                 if (!var_owned[inst.arg]) troll_die(TR_USE_AFTER_MOVE);
                 var_owned[inst.arg] = 0;
             }
@@ -600,7 +674,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             vec_push(&act->stack, vars.d[inst.arg]);
             vec_push(&act->stack_tags, vars_tags.d[inst.arg]);
             act->consecutive_pushes++;
-            if (act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         case OP_STORE: {
             int tag = 0;
@@ -619,7 +693,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
             int64_t a = spop_tag(&act->stack, &act->stack_tags, &ta);
             act->consecutive_pushes = 0;
-            if (ta != tb) troll_die(TR_TYPE_MISMATCH);
+            if (act == &ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
             uint64_t r = (inst.op == OP_ADD) ? (uint64_t)a + (uint64_t)b
                        : (inst.op == OP_SUB) ? (uint64_t)a - (uint64_t)b
                                              : (uint64_t)a * (uint64_t)b;
@@ -635,23 +709,27 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
             int64_t a = spop_tag(&act->stack, &act->stack_tags, &ta);
             act->consecutive_pushes = 0;
-            if (ta != tb) troll_die(TR_TYPE_MISMATCH);
-            if (b == 0) troll_die(TR_DIVZERO);
-            if (a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
-            vec_push(&act->stack, a / b);
+            if (act == &ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
+            if (act == &ctxA && b == 0) troll_die(TR_DIVZERO);
+            if (act == &ctxA && a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
+            int64_t div_res = (b != 0) ? (a / b) : 0;
+            vec_push(&act->stack, div_res);
             vec_push(&act->stack_tags, ta);
-            act->regs[0] = a / b;
+            act->regs[0] = div_res;
             act->reg_tags[0] = ta;
-            last_exec_result = a / b;
+            last_exec_result = div_res;
             break;
         }
         case OP_DUP: {
-            if (act->stack.n == 0) troll_die(TR_STACK);
+            if (act->stack.n == 0) {
+                if (act == &ctxA) troll_die(TR_STACK);
+                break;
+            }
             int tag = act->stack_tags.n > 0 ? (int)act->stack_tags.d[act->stack_tags.n - 1] : 0;
             vec_push(&act->stack, act->stack.d[act->stack.n - 1]);
             vec_push(&act->stack_tags, tag);
             act->consecutive_pushes++;
-            if (act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         }
         case OP_SWAP: {
@@ -683,22 +761,28 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             last_exec_result = v;
             break;
         }
-        case OP_REGGET:
-            vec_push(&act->stack, act->regs[inst.arg % 4]);
-            vec_push(&act->stack_tags, act->reg_tags[inst.arg % 4]);
+        case OP_REGGET: {
+            size_t ridx = (size_t)(((inst.arg % 4) + 4) % 4);
+            vec_push(&act->stack, act->regs[ridx]);
+            vec_push(&act->stack_tags, act->reg_tags[ridx]);
             act->consecutive_pushes++;
-            if (act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
+        }
         case OP_REGSET: {
+            size_t ridx = (size_t)(((inst.arg % 4) + 4) % 4);
             int tag_tmp = 0;
-            act->regs[inst.arg % 4] = spop_tag(&act->stack, &act->stack_tags, &tag_tmp);
-            act->reg_tags[inst.arg % 4] = (uint8_t)tag_tmp;
+            act->regs[ridx] = spop_tag(&act->stack, &act->stack_tags, &tag_tmp);
+            act->reg_tags[ridx] = (uint8_t)tag_tmp;
             act->consecutive_pushes = 0;
             break;
         }
-        case OP_FISH:
-            fish_grams += (inst.arg > 0 ? (int)inst.arg : 50);
+        case OP_FISH: {
+            int add = (inst.arg > 0 && inst.arg <= 10000) ? (int)inst.arg : 50;
+            fish_grams += add;
+            if (fish_grams > 100000) fish_grams = 100000;
             break;
+        }
         case OP_CRAZY: {
             int tb = 0, ta = 0;
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
@@ -716,7 +800,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             }
             break;
         case OP_DIR:
-            act->dir = (uint8_t)(inst.arg % 4);
+            act->dir = (uint8_t)(((inst.arg % 4) + 4) % 4);
             break;
         case OP_INPUTNUM: {
             vec_fit(&vars, (size_t)inst.arg + 1);
@@ -727,7 +811,8 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         }
         case OP_LOADIND: {
             int64_t a = spop(&act->stack);
-            if (a < 0 || a >= TUX_MEM_SIZE) troll_die(TR_MEMRANGE);
+            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a < 0 || a >= TUX_MEM_SIZE) a = (a % TUX_MEM_SIZE + TUX_MEM_SIZE) % TUX_MEM_SIZE;
             vec_push(&act->stack, memory[a].val);
             vec_push(&act->stack_tags, memory[a].type_tag);
             last_exec_result = memory[a].val;
@@ -736,7 +821,8 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         case OP_STOREIND: {
             int64_t v = spop(&act->stack);
             int64_t a = spop(&act->stack);
-            if (a < 0 || a >= TUX_MEM_SIZE) troll_die(TR_MEMRANGE);
+            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a < 0 || a >= TUX_MEM_SIZE) a = (a % TUX_MEM_SIZE + TUX_MEM_SIZE) % TUX_MEM_SIZE;
             h_entry.has_mem_modified = 1;
             h_entry.mem_addr = (uint16_t)a;
             h_entry.mem_val_before = memory[a].val;
@@ -839,11 +925,13 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         }
         case OP_DECAY: {
             int64_t a = spop(&act->stack);
-            if (a < 0 || a >= TUX_MEM_SIZE) troll_die(TR_MEMRANGE);
-            memory[a].age = TUX_AGE_DEAD;
-            memory[a].flags |= TUX_FLAG_CORRUPTED;
-            memory[a].type_tag = TUX_TYPE_I64;
-            memory[a].raw_code = (uint16_t)(tux_crazy64((uint64_t)memory[a].val, (uint64_t)a) & 0xFFFF);
+            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a >= 0 && a < TUX_MEM_SIZE) {
+                memory[a].age = TUX_AGE_DEAD;
+                memory[a].flags |= TUX_FLAG_CORRUPTED;
+                memory[a].type_tag = TUX_TYPE_I64;
+                memory[a].raw_code = (uint16_t)(tux_crazy64((uint64_t)memory[a].val, (uint64_t)a) & 0xFFFF);
+            }
             break;
         }
         case OP_WAKE: {
@@ -860,7 +948,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             break;
         case OP_UNDO:
             if (!tux_history_undo(&hist, act, memory)) {
-                troll_die(TR_NO_HISTORY);
+                if (act == &ctxA) troll_die(TR_NO_HISTORY);
             }
             break;
         case OP_PAY_TIME: {
@@ -903,18 +991,17 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             while (next_pc < 0) next_pc += TUX_MEM_SIZE;
             act->pc_code = (uint16_t)(next_pc % TUX_MEM_SIZE);
         }
+        if (act == &ctxB && act->pc_code < prog->len && prog->len < TUX_MEM_SIZE) {
+            act->pc_code = (uint16_t)(prog->len + (act->pc_code % (TUX_MEM_SIZE - prog->len)));
+        }
 
         /* ФАЗА 8: SCHEDULE (использует G_{t+1} и актуальное состояние памяти) */
         if (config->mode == TUX_MODE_APOCALYPSE) {
             tux_scheduler_step(&sched, act, memory, &genome, entropy.pool, step_counter);
         }
 
-        /* Завершение программы: если в Purgatory дошли до конца исходного кода и нет прыжка */
-        if (config->mode == TUX_MODE_PURGATORY && act->pc_code >= prog->len) {
-            break;
-        }
-        /* В Apocalypse: чистое завершение, если стек пуст и попали на серию NOP за пределами кода */
-        if (config->mode == TUX_MODE_APOCALYPSE && act->pc_code >= prog->len && act->stack.n == 0 && inst.op == OP_NOP) {
+        /* Завершение программы: если в Purgatory или Apocalypse основной контекст дошел до конца исходного кода и нет прыжка */
+        if ((config->mode == TUX_MODE_PURGATORY || config->mode == TUX_MODE_APOCALYPSE) && act == &ctxA && act->pc_code >= prog->len) {
             break;
         }
 
