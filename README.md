@@ -18,6 +18,10 @@
   <img src="https://img.shields.io/badge/Verification-90%2F90%20Suites%20%7C%2074k%20Assertions%20(100%25)-brightgreen.svg?style=flat-square" alt="Tests Passing">
 </p>
 
+<p align="center">
+  🌐 <b>English</b> | <a href="README.ru.md">Русский</a>
+</p>
+
 ---
 
 ## Abstract
