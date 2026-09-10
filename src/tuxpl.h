@@ -4,20 +4,158 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define TUXPL_VERSION "2.0.0"
+
+#define TUX_MEM_SIZE         65536
+#define TUX_HISTORY_DEPTH    32
+#define TUX_MAX_ACTIVE_CODE  16384
+#define TUX_NUM_OPCODES      42
+#define TUX_TIME_DEBT_LIMIT  5000
+
+/* Опкоды TuxPL 2.0.0: 30 классических + 12 расширенных */
 typedef enum {
+    /* 0..7 */
     OP_ADD, OP_SUB, OP_MUL, OP_DIV,
     OP_DUP, OP_SWAP, OP_POP, OP_PRINTCHAR,
+    /* 8..12 */
     OP_PUSH, OP_LOAD, OP_STORE, OP_LOADIND, OP_STOREIND,
+    /* 13..16 */
     OP_JMP, OP_JZ, OP_JNZ, OP_CMP,
+    /* 17..21 */
     OP_LISTNEW, OP_LISTPUSH, OP_LISTGET, OP_LISTSET, OP_LISTLEN,
+    /* 22..23 */
     OP_PRINTNUM, OP_INPUTNUM,
-    OP_REGGET, OP_REGSET, OP_FISH, OP_CRAZY, OP_CAST, OP_DIR
+    /* 24..29 */
+    OP_REGGET, OP_REGSET, OP_FISH, OP_CRAZY, OP_CAST, OP_DIR,
+    /* 30..41: Новые опкоды TuxPL 2.0.0 */
+    OP_PUSH_PC, OP_SET_PC, OP_SWAP_PC, OP_ADD_PC, OP_XOR_PC,
+    OP_CLONE, OP_DECAY, OP_WAKE, OP_REINTERPRET, OP_UNDO,
+    OP_PAY_TIME, OP_NOP
 } Opcode;
 
+/* Семантические теги типов */
+enum {
+    TUX_TYPE_I8     = 0,
+    TUX_TYPE_I16    = 1,
+    TUX_TYPE_I32    = 2,
+    TUX_TYPE_I64    = 3,
+    TUX_TYPE_TRIT   = 4,
+    TUX_TYPE_ADDR   = 5,
+    TUX_TYPE_OPCODE = 6
+};
+
+/* Возрастные категории */
+enum {
+    TUX_AGE_YOUNG = 0,
+    TUX_AGE_ADULT = 1,
+    TUX_AGE_OLD   = 2,
+    TUX_AGE_DEAD  = 3
+};
+
+/* Битовые флаги TuxCell */
+#define TUX_FLAG_DORMANT     0x01
+#define TUX_FLAG_MUTATED     0x02
+#define TUX_FLAG_CLONED      0x04
+#define TUX_FLAG_EXECUTABLE  0x08
+#define TUX_FLAG_IMMUTABLE   0x10
+#define TUX_FLAG_CORRUPTED   0x20
+#define TUX_FLAG_RESERVED_1  0x40
+#define TUX_FLAG_RESERVED_2  0x80
+
+/* Ячейка памяти Unified Memory */
+typedef struct {
+    int64_t  val;          /* Каноническое хранилище данных */
+    uint16_t raw_code;     /* 16-битный state payload */
+    uint8_t  type_tag;     /* Семантический тип */
+    uint8_t  age;          /* TUX_AGE_* */
+    uint8_t  gen;          /* Поколение 0..255 */
+    uint8_t  flags;        /* TUX_FLAG_* */
+    uint32_t lineage;      /* Детерминированный ID родословной */
+    uint32_t exec_count;   /* Счётчик исполнений (эволюционный, не откатывается) */
+} TuxCell;
+
+/* Паспорт программы */
+typedef struct {
+    uint64_t source_hash;   /* FNV-1a хэш сырых байтов до парсинга */
+    uint64_t bit_len;       /* Точный вес файла в битах */
+    char     tux_checksum;  /* T/U/X буква */
+} ProgramFingerprint;
+
+/* Геном программы */
+typedef struct {
+    uint64_t chromosomes[4]; /* G0..G3 */
+    uint32_t generation;
+    uint32_t divergence;
+} TuxGenome;
+
+/* Пул детерминированной энтропии */
+typedef struct {
+    uint64_t pool;
+    uint64_t step_counter;
+    uint64_t seed;
+} TuxEntropy;
+
+/* Динамический вектор чисел (для совместимости стека) */
+typedef struct {
+    int64_t *d;
+    size_t n, cap;
+} Vec;
+
+/* Контекст исполнения (TUX_A / TUX_B) */
+typedef struct {
+    uint16_t pc_code;
+    uint16_t pc_data;
+    int64_t  regs[4];
+    uint8_t  reg_tags[4];
+    Vec      stack;
+    Vec      stack_tags;
+    uint8_t  dir;
+    uint8_t  consecutive_pushes;
+    uint8_t  active;
+} TuxContext;
+
+/* Планировщик */
+typedef struct {
+    uint8_t  current_ctx_id;
+    uint64_t sched_state;
+} TuxScheduler;
+
+/* Долг времени */
+typedef struct {
+    uint64_t accumulated_debt;
+    uint64_t debt_limit;
+    uint64_t paid_total;
+} TuxTimeDebt;
+
+/* Запись в кольцевом буфере истории для UNDO */
+typedef struct {
+    uint8_t  ctx_id;
+    uint16_t pc_code;
+    uint16_t pc_data;
+    int64_t  regs[4];
+    uint8_t  reg_tags[4];
+    uint16_t mem_addr;
+    int64_t  mem_val_before;
+    uint8_t  mem_tag_before;
+    int64_t  stack_popped_val;
+    uint8_t  stack_popped_tag;
+    int      has_stack_popped;
+    int      has_mem_modified;
+    uint8_t  valid;
+} TuxHistoryEntry;
+
+typedef struct {
+    TuxHistoryEntry entries[TUX_HISTORY_DEPTH];
+    size_t head;
+    size_t count;
+} TuxHistoryBuffer;
+
+/* Структура команды исходного кода (для парсера 1.0.0 и совместимости) */
 typedef struct {
     Opcode op;
     int64_t arg;
-    int type_tag; /* 0: i8, 1: i16, 2: i32, 3: i64 */
+    int type_tag;
+    uint8_t initial_width;
 } Cmd;
 
 typedef struct {
@@ -25,51 +163,131 @@ typedef struct {
     size_t len;
     size_t cap;
     int is_purgatory;
+    int is_apocalypse;
+    char companion_name[64];
+    int has_companion;
+    ProgramFingerprint fp;
 } Program;
 
-/* troll.c — категории ошибок. Каждая — отдельный пул сообщений. */
+/* Режимы исполнения VM */
+typedef enum {
+    TUX_MODE_CLASSIC,
+    TUX_MODE_CURSED,
+    TUX_MODE_PURGATORY,
+    TUX_MODE_APOCALYPSE
+} TuxMode;
+
+typedef struct {
+    TuxMode mode;
+    int is_reversible;
+    int is_disasm;
+    int is_trace;
+    int is_trace_state;
+    int yolo_nuke;
+    const char *filepath;
+    const char *companion_path;
+} TuxVMConfig;
+
+/* Категории ошибок troll.c */
 enum {
-    TR_GARBAGE,    /* символы/слова вне алфавита */
-    TR_OPEN,       /* строка не начинается с {: */
-    TR_SPACE1,     /* после {: нет ровно одного пробела */
-    TR_SEP,        /* неправильный разделитель между командами */
-    TR_END,        /* нет ; или ; не прижата к команде */
-    TR_SIX,        /* больше 5 команд в строке */
-    TR_EMPTYLINE,  /* строка без команд */
-    TR_EMPTYFILE,  /* пустой файл */
-    TR_OVERFLOW,   /* операнд не влезает в int64 */
-    TR_STACK,      /* стек пуст */
-    TR_DIVZERO,    /* деление на ноль */
-    TR_MEMRANGE,   /* плохой адрес памяти */
-    TR_LISTRANGE,  /* индекс вне списка */
-    TR_BADJUMP,    /* прыжок в никуда */
-    TR_BADINPUT,   /* на входе не число */
-    TR_CURSED_NAME,       /* имя файла != число бит */
-    TR_CURSED_WEEKEND,    /* выходной день: Тукс спит */
-    TR_CURSED_NON_ARCH,   /* не Arch Linux система */
-    TR_CURSED_NO_LIB,     /* операция без библиотеки Tux */
-    TR_CURSED_LINE_CYCLE, /* строка нарушила цикл 1-2-3-4-5 */
-    TR_CURSED_SYNTAX,     /* нарушение синтаксиса скобок/символов */
-    TR_CURSED_CHECKSUM,   /* неверная контрольная буква T/U/X */
-    TR_MATH_DEATH,        /* провал математического теста при --PLS */
-    TR_ROULETTE_DEATH,    /* 90% шанс: Туксу не понравился код */
-    TR_GLOBAL_WARMING,    /* процессор перегрелся: льдина растаяла */
-    TR_STARVATION,        /* у Тукса кончилась рыба */
-    TR_AVALANCHE,         /* стек рухнул от гравитации (>7) */
-    TR_USE_AFTER_MOVE,    /* чтение перемещенного значения (Borrow Checker) */
-    TR_TYPE_MISMATCH,     /* несовпадение строгих типов */
-    TR_WHITESPACE_TAMPERED,/* нарушение невидимой whitespace-сигнатуры */
+    TR_GARBAGE,
+    TR_OPEN,
+    TR_SPACE1,
+    TR_SEP,
+    TR_END,
+    TR_SIX,
+    TR_EMPTYLINE,
+    TR_EMPTYFILE,
+    TR_OVERFLOW,
+    TR_STACK,
+    TR_DIVZERO,
+    TR_MEMRANGE,
+    TR_LISTRANGE,
+    TR_BADJUMP,
+    TR_BADINPUT,
+    TR_CURSED_NAME,
+    TR_CURSED_WEEKEND,
+    TR_CURSED_NON_ARCH,
+    TR_CURSED_NO_LIB,
+    TR_CURSED_LINE_CYCLE,
+    TR_CURSED_SYNTAX,
+    TR_CURSED_CHECKSUM,
+    TR_MATH_DEATH,
+    TR_ROULETTE_DEATH,
+    TR_GLOBAL_WARMING,
+    TR_STARVATION,
+    TR_AVALANCHE,
+    TR_USE_AFTER_MOVE,
+    TR_TYPE_MISMATCH,
+    TR_WHITESPACE_TAMPERED,
+    /* TuxPL 2.0.0 новые категории */
+    TR_DECODE,
+    TR_MUTATION,
+    TR_PARADOX,
+    TR_GENOME,
+    TR_AGE,
+    TR_ORPHAN,
+    TR_HERESY,
+    TR_NO_HISTORY,
+    TR_DORMANT,
+    TR_EXECUTION,
     TR_CAT_COUNT
 };
 
+/* troll.c */
 void troll_die(int cat);
+void troll_debug(const char *msg);
 
-/* parse.c — читает исходник, строит список команд. Ошибки — через troll_die. */
+/* genome.c — детерминированная математика, хэширование и эволюция */
+uint64_t tux_crazy64(uint64_t a, uint64_t b);
+uint64_t tux_source_hash(const char *raw_bytes, size_t len);
+uint64_t tux_derive_program_key(const ProgramFingerprint *fp);
+void tux_entropy_init(TuxEntropy *ent, uint64_t program_key);
+void tux_entropy_step(TuxEntropy *ent, uint64_t pc, uint64_t reg0, uint64_t genome0);
+void tux_genome_init(TuxGenome *gen, uint64_t program_key, const uint64_t *tu_genome_seed);
+void tux_genome_evolve(TuxGenome *gen, int64_t result, uint64_t entropy_pool, const int64_t regs[4], uint64_t pc);
+
+/* state.c — единая память Unified Memory, связанность регистров, история UNDO */
+void tux_mem_init(TuxCell *mem, uint64_t program_key, uint64_t genome0);
+uint16_t mutation_encode(int64_t val, uint64_t program_key, uint64_t genome0);
+void tux_register_coupling(int64_t regs[4]);
+void tux_history_push(TuxHistoryBuffer *hb, const TuxHistoryEntry *entry);
+int  tux_history_undo(TuxHistoryBuffer *hb, TuxContext *ctx, TuxCell *mem);
+
+/* decoder.c — динамический рантайм-декодер и ширина */
+typedef struct {
+    Opcode  op;
+    int64_t arg;
+    uint8_t width;
+} DecodedInstruction;
+
+DecodedInstruction decode_instruction(
+    const TuxCell *cell,
+    uint16_t pc,
+    uint64_t program_key,
+    const int64_t regs[4],
+    const TuxGenome *genome,
+    uint64_t entropy_pool,
+    uint8_t prev_width,
+    int is_apocalypse
+);
+
+/* mutation.c — самомодификация, старение, клонирование, распад */
+void tux_mutate_cell(TuxCell *cell, int64_t result, uint64_t program_key, uint64_t genome0, uint64_t entropy_pool, uint16_t pc);
+void tux_clone_cell(TuxCell *mem, uint16_t src_addr, uint16_t dst_addr, const TuxGenome *genome, uint64_t mutation_state, size_t *active_code_count);
+void tux_check_dormant_resonance(TuxCell *mem, const TuxGenome *genome);
+
+/* scheduler.c — детерминированный планировщик многозадачности */
+void tux_scheduler_init(TuxScheduler *sched, uint64_t program_key);
+uint8_t tux_scheduler_step(TuxScheduler *sched, const TuxContext *active_ctx, const TuxCell *mem, const TuxGenome *genome, uint64_t entropy_pool, uint64_t step_counter);
+
+/* parse.c — парсинг и компиляция */
 void parse_source(const char *src, Program *prog);
 void parse_source_cursed(const char *src, Program *prog);
 char calc_tux_checksum(const char *line, size_t len);
+int  load_companion_file(const char *path, uint64_t expected_hash, uint64_t *out_genome, uint64_t *out_regs);
 
-/* vm.c — исполнение. Ошибки — через troll_die. */
-void vm_run(const Program *prog);
+/* vm.c — исполнение */
+void vm_run(const Program *prog, const TuxVMConfig *config);
 
 #endif

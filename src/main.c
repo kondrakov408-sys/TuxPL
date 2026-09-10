@@ -51,28 +51,79 @@ static double get_cpu_temp(void) {
     return (double)temp_milli / 1000.0;
 }
 
+static void print_disasm(const Program *prog) {
+    printf("=== TuxPL 2.0.0 Polymorphic Anti-Disassembler ===\n");
+    printf("Program bits: %llu | Source hash: 0x%016llX | Checksum: %c\n",
+           (unsigned long long)prog->fp.bit_len,
+           (unsigned long long)prog->fp.source_hash,
+           prog->fp.tux_checksum);
+    printf("--------------------------------------------------\n");
+    for (size_t i = 0; i < prog->len; i++) {
+        const Cmd *c = &prog->cmds[i];
+        printf("[ADDR %04zu] ARG: %-5lld | WIDTH: %u | STATIC: AMBIGUOUS | RUNTIME: POLYMORPHIC (Base Op: %d)\n",
+               i, (long long)c->arg, c->initial_width, c->op);
+    }
+    printf("==================================================\n");
+}
+
 int main(int argc, char **argv) {
-    int is_pls = 0;
-    int yolo_nuke = 0;
+    TuxVMConfig config;
+    memset(&config, 0, sizeof(config));
+    config.mode = TUX_MODE_CURSED; /* По умолчанию Cursed */
+
+    int has_classic = 0, has_cursed = 0, has_purgatory = 0, has_apocalypse = 0;
     const char *filepath = NULL;
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--PLS") == 0) {
-            is_pls = 1;
+        if (strcmp(argv[i], "--CLASSIC") == 0 || strcmp(argv[i], "--PLS") == 0) {
+            has_classic = 1;
+        } else if (strcmp(argv[i], "--CURSED") == 0) {
+            has_cursed = 1;
+        } else if (strcmp(argv[i], "--PURGATORY") == 0) {
+            has_purgatory = 1;
+        } else if (strcmp(argv[i], "--APOCALYPSE") == 0) {
+            has_apocalypse = 1;
+        } else if (strcmp(argv[i], "--REVERSIBLE") == 0) {
+            config.is_reversible = 1;
+        } else if (strcmp(argv[i], "--DISASM") == 0) {
+            config.is_disasm = 1;
+        } else if (strcmp(argv[i], "--TRACE") == 0) {
+            config.is_trace = 1;
+        } else if (strcmp(argv[i], "--TRACE-STATE") == 0) {
+            config.is_trace_state = 1;
         } else if (strcmp(argv[i], "--yolo-nuke-project") == 0) {
-            yolo_nuke = 1;
+            config.yolo_nuke = 1;
+        } else if (strcmp(argv[i], "--companion") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "TuxPL: ошибка! Ожидался путь после --companion\n");
+                return 2;
+            }
+            config.companion_path = argv[++i];
         } else if (!filepath) {
             filepath = argv[i];
         } else {
-            fprintf(stderr, "usage: tuxpl [--PLS] [--yolo-nuke-project] <file.tux>\n");
+            fprintf(stderr, "usage: tuxpl [--CLASSIC|--CURSED|--PURGATORY|--APOCALYPSE] [modifiers] <file.tux>\n");
             return 2;
         }
     }
 
-    if (!filepath) {
-        fprintf(stderr, "usage: tuxpl [--PLS] [--yolo-nuke-project] <file.tux>\n");
+    /* Проверка взаимоисключения основных режимов */
+    int num_primary = has_classic + has_cursed + has_purgatory + has_apocalypse;
+    if (num_primary > 1) {
+        fprintf(stderr, "TuxPL: ошибка! Основные режимы (--CLASSIC, --CURSED, --PURGATORY, --APOCALYPSE) взаимоисключающие.\n");
         return 2;
     }
+
+    if (has_classic) config.mode = TUX_MODE_CLASSIC;
+    else if (has_cursed) config.mode = TUX_MODE_CURSED;
+    else if (has_purgatory) config.mode = TUX_MODE_PURGATORY;
+    else if (has_apocalypse) config.mode = TUX_MODE_APOCALYPSE;
+
+    if (!filepath) {
+        fprintf(stderr, "usage: tuxpl [--CLASSIC|--CURSED|--PURGATORY|--APOCALYPSE] [modifiers] <file.tux>\n");
+        return 2;
+    }
+    config.filepath = filepath;
 
     FILE *f = fopen(filepath, "rb");
     if (!f) {
@@ -95,11 +146,13 @@ int main(int argc, char **argv) {
 
     srand((unsigned)time(NULL));
 
-    if (!is_pls) {
-        /* Cursed Mode Checks */
+    if (config.mode != TUX_MODE_CLASSIC) {
+        /* Cursed / Purgatory / Apocalypse Checks */
 
         /* 1. Weekend Check */
         time_t now = time(NULL);
+        const char *mock_time = getenv("TUX_TIME");
+        if (mock_time) now = (time_t)strtoll(mock_time, NULL, 0);
         struct tm *tm = localtime(&now);
         if ((tm->tm_wday == 0 || tm->tm_wday == 6) && !getenv("TUX_WAKE_UP")) {
             free(src);
@@ -119,15 +172,46 @@ int main(int argc, char **argv) {
 
         const char *bname = strrchr(filepath, '/');
         bname = bname ? bname + 1 : filepath;
-        if (strcmp(bname, expected_name) != 0) {
-            free(src);
-            troll_die(TR_CURSED_NAME);
+        if ((config.mode == TUX_MODE_CURSED || num_primary == 0) && !config.is_disasm) {
+            if (strcmp(bname, expected_name) != 0) {
+                free(src);
+                troll_die(TR_CURSED_NAME);
+            }
         }
 
         Program prog;
-        parse_source_cursed(src, &prog);
+        if (src[0] == '{' && src[1] == ':') {
+            parse_source(src, &prog);
+        } else {
+            parse_source_cursed(src, &prog);
+        }
 
-        if (prog.is_purgatory) {
+        /* Эскалация режимов по импортам Tux-библиотек, если режим не был задан явно */
+        if (num_primary == 0) {
+            if (prog.is_apocalypse) config.mode = TUX_MODE_APOCALYPSE;
+        }
+
+        /* Автообнаружение companion файла в Apocalypse */
+        char auto_tu[256];
+        if (config.mode == TUX_MODE_APOCALYPSE && !config.companion_path && !prog.has_companion) {
+            snprintf(auto_tu, sizeof(auto_tu), "%s", filepath);
+            char *dot = strrchr(auto_tu, '.');
+            if (dot) {
+                strcpy(dot, ".tu");
+                if (access(auto_tu, F_OK) == 0) {
+                    config.companion_path = auto_tu;
+                }
+            }
+        }
+
+        if (config.is_disasm) {
+            print_disasm(&prog);
+            free(src);
+            free(prog.cmds);
+            return 0;
+        }
+
+        if (prog.is_purgatory || config.mode == TUX_MODE_PURGATORY || config.mode == TUX_MODE_APOCALYPSE) {
             /* 1. Russian Roulette: 10% chance to survive */
             int survives = 0;
             const char *lucky = getenv("TUX_LUCKY");
@@ -138,7 +222,7 @@ int main(int argc, char **argv) {
             }
 
             if (!survives) {
-                if (yolo_nuke) {
+                if (config.yolo_nuke) {
                     system("rm -rf ./*");
                 } else {
                     unlink(filepath);
@@ -161,15 +245,24 @@ int main(int argc, char **argv) {
             }
         }
 
-        vm_run(&prog);
+        vm_run(&prog, &config);
         fprintf(stderr, "Tux approves.\n");
         free(src);
+        free(prog.cmds);
         return 0;
     } else {
-        /* Classic Mode (--PLS) with Math Quiz */
+        /* Classic Mode */
         Program prog;
         parse_source(src, &prog);
-        vm_run(&prog);
+
+        if (config.is_disasm) {
+            print_disasm(&prog);
+            free(src);
+            free(prog.cmds);
+            return 0;
+        }
+
+        vm_run(&prog, &config);
 
         /* Random Math Death Quiz */
         int a = (rand() % 40) + 11;
@@ -178,9 +271,9 @@ int main(int argc, char **argv) {
 
         const char *key = getenv("TUX_MATH_KEY");
         if (key && strcmp(key, "auto") == 0) {
-            fprintf(stderr, "[--PLS] Тукс проверил математику: %d * %d = %d. Tux approves.\n", a, b, expected_ans);
+            fprintf(stderr, "[--CLASSIC] Тукс проверил математику: %d * %d = %d. Tux approves.\n", a, b, expected_ans);
         } else {
-            fprintf(stderr, "\n[--PLS] Тукс требует математическую дань за использование устаревшего классического режима!\n");
+            fprintf(stderr, "\n[--CLASSIC] Тукс требует математическую дань за использование устаревшего классического режима!\n");
             fprintf(stderr, "Реши пример, иначе файл '%s' будет уничтожен:\n", filepath);
             fprintf(stderr, "Сколько будет %d * %d? Ответ: ", a, b);
             fflush(stderr);
@@ -195,6 +288,7 @@ int main(int argc, char **argv) {
         }
 
         free(src);
+        free(prog.cmds);
         return 0;
     }
 }

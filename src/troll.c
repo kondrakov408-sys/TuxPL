@@ -181,6 +181,68 @@ static const char *const M_WHITESPACE_TAMPERED[] = {
     "Контрольная сумма невидимых символов нарушена. Тукс видит фальсификацию отступов."
 };
 
+/* --- Новые категории TuxPL 2.0.0 --- */
+
+static const char *const M_DECODE[] = {
+    "СБОЙ ДЕКОДЕРА: Ячейка памяти выродилась в запрещённое состояние! Код больше не распознаётся как инструкция.",
+    "Рантайм-декодер сломал клюв о твою мутировавшую память. Опкод растворился в энтропии.",
+    "Динамический декодер отверг ячейку: контекстный сдвиг превысил допустимые пределы вселенной Тукса."
+};
+
+static const char *const M_MUTATION[] = {
+    "МУТАЦИОННЫЙ КОЛЛАПС: Программа мутировала саму себя до полной потери функциональности!",
+    "Слишком много самомодификаций! Код превратился в первородную жижу из нулей и единиц.",
+    "Ячейка попыталась мутировать в несуществующее измерение. Тукс наложил вето."
+};
+
+static const char *const M_PARADOX[] = {
+    "ТЕРМОДИНАМИЧЕСКИЙ ПАРАДОКС: Нарушение второго закона термодинамики Тукса в режиме --REVERSIBLE!",
+    "Необратимая операция не может быть обращена! Кольцевой буфер истории полон, энтропия растёт.",
+    "Попытка уничтожить информацию без сохранения снимка. Время течёт только вперёд!"
+};
+
+static const char *const M_GENOME[] = {
+    "ФАТАЛЬНАЯ ДИВЕРГЕНЦИЯ ГЕНОМА: Хромосомы программы распались под воздействием мутаций!",
+    "Геном достиг критической точки распада. Эволюция пошла по тупиковой ветви.",
+    "Генетический код программы мутировал в бессмыслицу. Пингвиний биоконтроль закрыл процесс."
+};
+
+static const char *const M_AGE[] = {
+    "ПРЕДЕЛ ПОКОЛЕНИЙ: Инструкция достигла 255 поколения клонирования и рассыпалась в прах!",
+    "Слишком много инбридинга кода! 255 поколений клонов — это биологический предел стаи.",
+    "Код состарился до костей мамонта. Поколение переполнилось, инструкция умерла окончательно."
+};
+
+static const char *const M_ORPHAN[] = {
+    "СИРОТА: Программа затребовала companion-файл (.tu), но осталась одна на льдине!",
+    "Companion-файл не найден! Пингвин в отчаянии мечется по файловой системе.",
+    "Где твой спутник .tu? Тукс отказывается исполнять программу-одиночку без её метаданных."
+};
+
+static const char *const M_HERESY[] = {
+    "ЕРЕСЬ: Сигнатура или контрольная сумма companion-файла (.tu) осквернена!",
+    "Магический заголовок TUX2 нарушен. Файл-спутник подделан еретиками.",
+    "Контрольный хэш файла-спутника не сошёлся с исходным кодом. Инквизиция Тукса вынесла приговор."
+};
+
+static const char *const M_NO_HISTORY[] = {
+    "НЕТ ИСТОРИИ: Попытка выполнить UNDO при пустом буфере времени!",
+    "Назад дороги нет! В буфере истории пусто, как в желудке голодного пингвина.",
+    "Машина времени дала осечку: некуда откатываться, ты в самом начале своего падения."
+};
+
+static const char *const M_DORMANT[] = {
+    "СПЯЩИЙ КОД: Попытка исполнить ячейку в состоянии DORMANT без резонанса генома!",
+    "Код крепко спит на льдине. Не буди его без команды OP_WAKE или нужной фазы генома.",
+    "Инструкция находится в глубоком анабиозе. Пробуждение не состоялось."
+};
+
+static const char *const M_EXECUTION[] = {
+    "ФАТАЛЬНЫЙ СБОЙ ИСПОЛНЕНИЯ: Контексты TUX_A и TUX_B взаимоуничтожились в общей памяти!",
+    "Двухконтекстная машина боли рухнула под тяжестью детерминированного хаоса.",
+    "Планировщик запутался в квантовой суперпозиции контекстов. Тукс ушёл рыбачить."
+};
+
 typedef struct {
     const char *const *m;
     int n;
@@ -203,23 +265,39 @@ void troll_die(int cat) {
         [TR_LISTRANGE]            = {M_LISTRANGE,            2},
         [TR_BADJUMP]              = {M_BADJUMP,              2},
         [TR_BADINPUT]             = {M_BADINPUT,             2},
-        [TR_CURSED_NAME]           = {M_CURSED_NAME,           3},
-        [TR_CURSED_WEEKEND]        = {M_CURSED_WEEKEND,        3},
-        [TR_CURSED_NON_ARCH]       = {M_CURSED_NON_ARCH,       3},
-        [TR_CURSED_NO_LIB]         = {M_CURSED_NO_LIB,         3},
-        [TR_CURSED_LINE_CYCLE]     = {M_CURSED_LINE_CYCLE,     3},
-        [TR_CURSED_SYNTAX]         = {M_CURSED_SYNTAX,         3},
-        [TR_CURSED_CHECKSUM]       = {M_CURSED_CHECKSUM,       3},
-        [TR_MATH_DEATH]            = {M_MATH_DEATH,            3},
-        [TR_ROULETTE_DEATH]        = {M_ROULETTE_DEATH,        3},
-        [TR_GLOBAL_WARMING]        = {M_GLOBAL_WARMING,        3},
-        [TR_STARVATION]            = {M_STARVATION,            3},
-        [TR_AVALANCHE]             = {M_AVALANCHE,             3},
-        [TR_USE_AFTER_MOVE]        = {M_USE_AFTER_MOVE,        3},
-        [TR_TYPE_MISMATCH]         = {M_TYPE_MISMATCH,         3},
-        [TR_WHITESPACE_TAMPERED]    = {M_WHITESPACE_TAMPERED,    3}
+        [TR_CURSED_NAME]          = {M_CURSED_NAME,          3},
+        [TR_CURSED_WEEKEND]       = {M_CURSED_WEEKEND,       3},
+        [TR_CURSED_NON_ARCH]      = {M_CURSED_NON_ARCH,      3},
+        [TR_CURSED_NO_LIB]        = {M_CURSED_NO_LIB,        3},
+        [TR_CURSED_LINE_CYCLE]    = {M_CURSED_LINE_CYCLE,    3},
+        [TR_CURSED_SYNTAX]        = {M_CURSED_SYNTAX,        3},
+        [TR_CURSED_CHECKSUM]      = {M_CURSED_CHECKSUM,      3},
+        [TR_MATH_DEATH]           = {M_MATH_DEATH,           3},
+        [TR_ROULETTE_DEATH]       = {M_ROULETTE_DEATH,       3},
+        [TR_GLOBAL_WARMING]       = {M_GLOBAL_WARMING,       3},
+        [TR_STARVATION]           = {M_STARVATION,           3},
+        [TR_AVALANCHE]            = {M_AVALANCHE,            3},
+        [TR_USE_AFTER_MOVE]       = {M_USE_AFTER_MOVE,       3},
+        [TR_TYPE_MISMATCH]        = {M_TYPE_MISMATCH,        3},
+        [TR_WHITESPACE_TAMPERED]  = {M_WHITESPACE_TAMPERED,  3},
+        /* TuxPL 2.0.0 */
+        [TR_DECODE]               = {M_DECODE,               3},
+        [TR_MUTATION]             = {M_MUTATION,             3},
+        [TR_PARADOX]              = {M_PARADOX,              3},
+        [TR_GENOME]               = {M_GENOME,               3},
+        [TR_AGE]                  = {M_AGE,                  3},
+        [TR_ORPHAN]               = {M_ORPHAN,               3},
+        [TR_HERESY]               = {M_HERESY,               3},
+        [TR_NO_HISTORY]           = {M_NO_HISTORY,           3},
+        [TR_DORMANT]              = {M_DORMANT,              3},
+        [TR_EXECUTION]            = {M_EXECUTION,            3}
     };
+    if (cat < 0 || cat >= TR_CAT_COUNT) cat = TR_GARBAGE;
     const Pool *p = &pools[cat];
     fprintf(stderr, "TuxPL: %s\n", p->m[rand() % p->n]);
     exit(1);
+}
+
+void troll_debug(const char *msg) {
+    fprintf(stderr, "[TuxPL DEBUG] %s\n", msg);
 }

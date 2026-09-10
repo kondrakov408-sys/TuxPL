@@ -36,6 +36,24 @@ def to_bits(n):
         return ""
     return bin(n)[2:].replace("0", "u").replace("1", "U")
 
+OPCODE_EXT = {
+    "FISH": 100,
+    "CRAZY": 101,
+    "DIR": 102,
+    "PUSH_PC": 107,
+    "SET_PC": 108,
+    "SWAP_PC": 109,
+    "ADD_PC": 110,
+    "XOR_PC": 111,
+    "CLONE": 112,
+    "DECAY": 113,
+    "WAKE": 114,
+    "REINTERPRET": 115,
+    "UNDO": 116,
+    "PAY_TIME": 117,
+    "NOP": 118,
+}
+
 def word(op, arg=0):
     op = op.upper()
     if op in BANK_A:
@@ -46,12 +64,10 @@ def word(op, arg=0):
     if op == "REGSET":
         b = f"{arg & 3:02b}".replace("0", "u").replace("1", "U")
         return "TUu" + b + "x"
-    if op == "FISH":
-        return "tuuUUuuUuux"
-    if op == "CRAZY":
-        return "tuuUUuuUuUx"
-    if op == "DIR":
-        return "tuuUUuuUUux"
+    if op in OPCODE_EXT:
+        code = OPCODE_EXT[op]
+        b = bin(code)[2:].replace("0", "u").replace("1", "U")
+        return "tuu" + b + "x"
     if op == "CAST":
         code = 103 + (arg & 3)
         b = bin(code)[2:].replace("0", "u").replace("1", "U")
@@ -139,7 +155,7 @@ def compile_cursed(cmds, is_purgatory=False):
             needed_libs.add("TuUX")
         elif op_up == "REGSET":
             needed_libs.add("TUux")
-        elif op_up in ("FISH", "CRAZY", "DIR", "CAST"):
+        elif op_up in ("FISH", "CRAZY", "DIR", "CAST") or op_up in OPCODE_EXT:
             needed_libs.add("tuux")
         elif op_up in BANK_B:
             needed_libs.add(BANK_B[op_up][0] + "X" if BANK_B[op_up][1] == "X" else BANK_B[op_up][0] + "x")
@@ -192,6 +208,36 @@ def compile_cursed(cmds, is_purgatory=False):
     filename = f"{bits}.tux"
     return filename, full_code
 
+def fnv1a_64(data: bytes) -> int:
+    h = 0xCBF29CE484222325
+    for b in data:
+        h ^= b
+        h = (h * 0x100000001B3) & 0xFFFFFFFFFFFFFFFF
+    return h
+
+def generate_companion_data(tux_content: bytes, chromosomes=None, regs=None) -> bytes:
+    import struct
+    if chromosomes is None:
+        chromosomes = [
+            0x123456789ABCDEF0,
+            0x0FEDCBA987654321,
+            0xCAFEBABE01234567,
+            0x1337C0DED00DF00D
+        ]
+    if regs is None:
+        regs = [0, 0, 0, 0]
+
+    src_hash = fnv1a_64(tux_content)
+    header = struct.pack("<4sHHQ", b"TUX2", 0x0200, 0, src_hash)
+    chrom_bytes = struct.pack("<4Q", *chromosomes)
+    regs_bytes = struct.pack("<4Q", *regs)
+    payload = header + chrom_bytes + regs_bytes
+    assert len(payload) == 0x50
+    chk = fnv1a_64(payload)
+    companion = payload + struct.pack("<Q", chk)
+    assert len(companion) == 0x58
+    return companion
+
 def make_text(text):
     cmds = []
     for char in text:
@@ -230,6 +276,18 @@ if __name__ == "__main__":
             f.write(code)
         print(f"# Сохранено в {fname} (размер: {len(code)} байт = {len(code)*8} бит)")
         print(code)
+    elif len(sys.argv) > 1 and sys.argv[1] == "companion":
+        if len(sys.argv) < 3:
+            print("Укажите путь к .tux файлу: python3 tux_helper.py companion <file.tux>")
+            sys.exit(1)
+        src_path = sys.argv[2]
+        with open(src_path, "rb") as f:
+            content = f.read()
+        tu_data = generate_companion_data(content)
+        tu_path = src_path[:-4] + ".tu" if src_path.endswith(".tux") else src_path + ".tu"
+        with open(tu_path, "wb") as f:
+            f.write(tu_data)
+        print(f"# Сгенерирован валидный Companion файл TuxPL 2.0: {tu_path} ({len(tu_data)} байт)")
     elif len(sys.argv) > 1 and sys.argv[1] == "text":
         msg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Hi!"
         print(f"# Классический код TuxPL для текста: {msg}")
@@ -239,9 +297,16 @@ if __name__ == "__main__":
         arg = int(sys.argv[3]) if len(sys.argv) > 3 else 0
         w = word(op, arg)
         print(f"{op} {arg}  -->  {w}  (U-букв: {count_u(w)}, разделитель: {repr(sep(w))})")
+    elif len(sys.argv) > 1 and sys.argv[1] == "opcodes":
+        print("Поддерживаемые опкоды TuxPL 2.0:")
+        all_ops = list(BANK_A.keys()) + list(BANK_B.keys()) + list(OPCODE_EXT.keys()) + ["REGGET", "REGSET", "CAST"]
+        for o in sorted(all_ops):
+            print(f"  {o}")
     else:
         print("Использование:")
-        print("  python3 tux_helper.py purgatory \"Hi\"  # создать файл режима Purgatory")
-        print("  python3 tux_helper.py cursed \"Hi\"     # создать адский <bits>.tux файл")
-        print("  python3 tux_helper.py word PUSH 42    # узнать слово TuxPL для PUSH 42")
-        print("  python3 tux_helper.py text \"Hello!\"   # классический код для --PLS")
+        print("  python3 tux_helper.py purgatory \"Hi\"    # создать файл режима Purgatory")
+        print("  python3 tux_helper.py cursed \"Hi\"       # создать адский <bits>.tux файл")
+        print("  python3 tux_helper.py companion <f.tux> # создать .tu companion файл")
+        print("  python3 tux_helper.py word PUSH 42      # узнать слово TuxPL для PUSH 42")
+        print("  python3 tux_helper.py text \"Hello!\"     # классический код для --PLS")
+        print("  python3 tux_helper.py opcodes           # список всех опкодов TuxPL 2.0")

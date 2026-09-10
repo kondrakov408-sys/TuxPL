@@ -2,3 +2,4 @@ tuxpl
 *.o
 __pycache__/
 *.pyc
+graphify-out/

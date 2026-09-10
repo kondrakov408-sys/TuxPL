@@ -1,21 +1,19 @@
-# 🐧 TuxPL (Tux Programming Language)
+# 🐧 TuxPL 2.0.0 (Tux Programming Language)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kondrakov408-sys/TuxPL/main/examples/tux.png" alt="Tux" width="160" onerror="this.style.display='none'"/>
 </p>
 
 <p align="center">
-  <b>Самый безжалостный, токсичный и эзотерический стековый язык программирования.</b><br>
+  <b>Самый безжалостный, токсичный и эзотерический стековый язык программирования с самомодифицирующейся виртуальной машиной (Self-Modifying Unified VM).</b><br>
   Каждая команда — слово из букв <code>T/t</code>, <code>U/u</code> и <code>x/X</code>.<br>
-  Компилятор не говорит, где ошибка. Компилятор угорает, спит по выходным, требует рыбу и удаляет файлы.
+  Компилятор не говорит, где ошибка. Компилятор угорает, спит по выходным, требует рыбу, эволюционирует геном и удаляет файлы.
 </p>
 
 <p align="center">
-  <a href="#-три-режима-работы"><img src="https://img.shields.io/badge/Mode-Cursed%20By%20Default-red.svg" alt="Cursed Mode"></a>
-  <a href="#2--режим-чистилища-purgatory-mode--хардкор-расширение"><img src="https://img.shields.io/badge/Expansion-Purgatory%20Ultra--Hardcore-black.svg" alt="Purgatory Mode"></a>
-  <a href="#3-только-arch-подобные-системы"><img src="https://img.shields.io/badge/OS-Arch--like%20Linux%20Only-blue.svg?logo=arch-linux" alt="Arch Linux Only"></a>
-  <a href="#4-167-микробиблиотек-в-tux"><img src="https://img.shields.io/badge/Libraries-167%20Micro--Tux-purple.svg" alt="167 Tux Libraries"></a>
-  <a href="#-тестирование"><img src="https://img.shields.io/badge/Tests-35%2F35%20Passing-brightgreen.svg" alt="Tests OK"></a>
+  <a href="#-четыре-режима-работы"><img src="https://img.shields.io/badge/Version-2.0.0-gold.svg" alt="Version 2.0.0"></a>
+  <a href="#-четыре-режима-работы"><img src="https://img.shields.io/badge/Modes-Classic%20%7C%20Cursed%20%7C%20Purgatory%20%7C%20Apocalypse-black.svg" alt="4 Primary Modes"></a>
+  <a href="#-тестирование"><img src="https://img.shields.io/badge/Tests-66%2F66%20Passing-brightgreen.svg" alt="Tests 66/66 OK"></a>
   <img src="https://img.shields.io/badge/Std-C99-orange.svg" alt="C99">
 </p>
 
@@ -39,24 +37,34 @@
 # Сборка интерпретатора
 make
 
+# Запуск программы в режиме Апокалипсиса (TuxPL 2.0 Apocalypse Mode)
+TUX_LUCKY=1 ./tuxpl --APOCALYPSE examples/apocalypse.tux
+
+# Запуск самомодифицирующейся программы в Чистилище (Purgatory Mode)
+TUX_LUCKY=1 ./tuxpl --PURGATORY examples/self_modify.tux
+
+# Запуск с обратимым откатом состояния данных (--REVERSIBLE + OP_UNDO)
+TUX_LUCKY=1 ./tuxpl --PURGATORY --REVERSIBLE examples/undo.tux
+
+# Запуск честного полиморфного анти-дизассемблера
+./tuxpl --DISASM examples/self_modify.tux
+
 # Запуск адской программы (Cursed Mode, имя строго <bits>.tux)
 ./tuxpl examples/1840.tux
 ./tuxpl examples/3784.tux
-
-# Запуск хардкорной программы режима Чистилища (Purgatory Mode)
-TUX_LUCKY=1 ./tuxpl examples/2192.tux
 
 # Запуск классической программы (требуется флаг --PLS и решение теста)
 ./tuxpl --PLS examples/hi.tux
 echo "3 4" | TUX_MATH_KEY=auto ./tuxpl --PLS examples/sum.tux
 
-# Прогон всех 35 тестов
-make test                   # Classic (15/15) + Cursed (8/8) + Hardcore (12/12)
+# Прогон всех 66 тестов TuxPL 2.0.0
+make test                   # Classic (15) + Cursed (8) + Hardcore (12) + Golden (22) + Apocalypse (9)
 ```
 
 ---
 
-## 🩸 Три режима работы
+## 🩸 Четыре режима работы
+
 
 ### 1. 💀 Адский режим (Cursed Mode) — **ПО УМОЛЧАНИЮ**
 Любой файл, переданный в `./tuxpl <file>`, обязан удовлетворять **7 Священным Законам Тукса**:
@@ -258,8 +266,46 @@ make test                   # Classic (15/15) + Cursed (8/8) + Hardcore (12/12)
 
 ---
 
-### 3. 🛡️ Классический режим (`--PLS`) и Математическая Смертная Казнь
-Чтобы запустить старые программы или примеры без адских правил, используется флаг `--PLS`:
+### 3. 🌋 Режим Чистилища (`--PURGATORY`)
+Режим базовой самомодификации и фон-неймановской памяти:
+- **Unified Memory:** Код, стек и данные физически размещаются в едином пространстве на 65536 ячеек (`memory[0..65535]`).
+- **Старение кода:** Инструкции стареют при выполнении (`YOUNG` $\to$ `ADULT` $\to$ `OLD` $\to$ `DEAD`). Мёртвые ячейки навсегда становятся `OP_NOP`.
+- **Мутации ячеек:** После каждого шага выполненная ячейка мутирует через функцию `mutation_encode()`.
+- **Единый контекст:** Выполняется в контексте `TUX_A` с детерминированным циклом эволюции.
+
+```bash
+TUX_LUCKY=1 ./tuxpl --PURGATORY examples/self_modify.tux
+```
+
+---
+
+### 4. 💀 Режим Апокалипсиса (`--APOCALYPSE`) — **ВЕРШИНА ВРАЖДЕБНОСТИ 2.0.0**
+Полная машина боли и детерминированного хаоса:
+- **Двухконтекстная модель (`TUX_A` и `TUX_B`):** В единой памяти одновременно работают два конкурирующих потока. `TUX_B` стартует в детерминированной, но непредсказуемой точке 64K-пространства.
+- **Детерминированный планировщик (`scheduler.c`):** Переключает контексты на основе квантовой метрики памяти, генома и регистров.
+- **Динамический рантайм-декодер:** Опкоды вычисляются «на лету» чистой функцией на основе паспорта программы (`program_key`), хромосом генома ($G_0 \dots G_3$) и пула энтропии.
+- **Динамическая ширина инструкций:** Размер операнда ($W_t \in [1..4]$ байт) синтезируется динамически на каждом шаге.
+- **Связанность регистров (Register Coupling):** Регистры $R_0 \dots R_3$ связаны нелинейными дифференциальными связями.
+- **Companion-файлы (`.tu`):** В бинарном файле-спутнике (88 байт) хранятся хромосомы и сиды регистров для `TUX_B`. Отсутствие спутника $\implies$ `TR_ORPHAN`, подделка $\implies$ `TR_HERESY`.
+- **Долг времени (Time Debt):** Инструкции накапливают временной долг. Превышение лимита $\implies$ немедленная порча памяти. Долг можно погасить командой `OP_PAY_TIME`, жертвуя драгоценной рыбой.
+
+```bash
+TUX_LUCKY=1 ./tuxpl --APOCALYPSE examples/apocalypse.tux
+```
+
+---
+
+### 🎛️ Ортогональные модификаторы CLI:
+- `--REVERSIBLE`: Включение термодинамической обратимости данных (`OP_UNDO`).
+- `--DISASM`: Честный полиморфный анти-дизассемблер.
+- `--TRACE`: Пошаговая трассировка (Step, Context, PC, Opcode, Debt).
+- `--TRACE-STATE`: Полный диагностический дамп состояния (хромосомы Genome $G_0..G_3$, пул Entropy).
+- `--companion <path>`: Явное указание пути к companion-файлу (`.tu`).
+
+---
+
+### 5. 🛡️ Классический режим (`--CLASSIC` / `--PLS`) и Математическая Смертная Казнь
+Чтобы запустить старые программы или примеры без адских правил, используется флаг `--PLS` (или `--CLASSIC`):
 ```bash
 ./tuxpl --PLS examples/loop.tux
 ```
@@ -404,9 +450,16 @@ Tux approves.
 
 ---
 
-## 📚 Обучающие материалы
+## 📚 Обучающие материалы и Документация
 
-В репозитории есть пошаговый курс:
+### Спецификация и архитектура TuxPL 2.0.0:
+- [docs/VM.md](docs/VM.md) — Unified Memory, модель ячейки `TuxCell`, Dual PC (`PC_CODE`/`PC_DATA`) и 42 опкода.
+- [docs/APOCALYPSE.md](docs/APOCALYPSE.md) — Двухконтекстная модель (`TUX_A`/`TUX_B`), планировщик, долг времени и companion-файлы (`.tu`).
+- [docs/SELF_MODIFYING.md](docs/SELF_MODIFYING.md) — Самомодификация, старение ячеек, клонирование (`OP_CLONE`) и Dormant Resonance.
+- [docs/GENOME.md](docs/GENOME.md) — Хромосомы генома $G_0..G_3$, математика `CRAZY64`, энтропия и оверрайды окружения.
+- [docs/SEMANTICS.md](docs/SEMANTICS.md) — Канонический 9-фазный цикл выполнения и фундаментальные инварианты.
+
+### Базовый курс 1.0.0:
 - [docs/ПРОСТО_О_TUXPL.md](docs/ПРОСТО_О_TUXPL.md) — Язык на пальцах за 3 минуты (на примере стопки тарелок).
 - [docs/урок1.md](docs/урок1.md) — Синтаксис строк, банк A, первый вывод.
 - [docs/урок2.md](docs/урок2.md) — Переменные, стек и ввод/вывод чисел.
@@ -433,21 +486,31 @@ Tux approves.
 - `TR_USE_AFTER_MOVE`: *"BORROW CHECKER: Попытка прочитать перемещённое значение! Use-After-Move запрещён каноном Rust."*
 - `TR_TYPE_MISMATCH`: *"НЕСОВПАДЕНИЕ ТИПОВ! Попытка сложить разные разрядности без явного кастинга."*
 - `TR_WHITESPACE_TAMPERED`: *"Скрытый слой Whitespace отверг твою программу. Пробелы расставлены не по фен-шую."*
+- `TR_ORPHAN`: *"СИРОТА: Программа затребовала companion-файл (.tu), но осталась одна на льдине!"*
+- `TR_HERESY`: *"ЕРЕСЬ: Сигнатура или контрольная сумма companion-файла (.tu) осквернена!"*
+- `TR_NO_HISTORY`: *"НЕТ ИСТОРИИ: Попытка выполнить UNDO при пустом буфере времени!"*
+- `TR_AGE`: *"ПРЕДЕЛ ПОКОЛЕНИЙ: Инструкция достигла 255 поколения клонирования и рассыпалась в прах!"*
+- `TR_DORMANT`: *"СПЯЩИЙ КОД: Попытка исполнить ячейку в состоянии DORMANT без резонанса генома!"*
+- `TR_PARADOX`: *"ТЕРМОДИНАМИЧЕСКИЙ ПАРАДОКС: Попытка нарушить энтропию в обратимом режиме!"*
 
 ---
 
 ## 🧪 Тестирование
 
 ```bash
-# Запуск полного сьюта из 35 тестов
+# Запуск полного сьюта из 66 тестов TuxPL 2.0.0
 make test
-# Classic:  15/15 OK
-# Cursed:   8/8 OK
-# Hardcore: 12/12 OK
-# Всего:    35/35 PASSING!
+# Classic:        15/15 OK
+# Cursed:         8/8 OK
+# Hardcore:       12/12 OK
+# Golden Vectors: 22/22 OK
+# Apocalypse:     9/9 OK
+# Всего:          66/66 PASSING (100%)!
 
-# Запуск только хардкорных тестов Чистилища
-make test-hardcore
+# Запуск отдельных тестовых наборов
+make test-golden       # Тесты золотых векторов (CRAZY64, decoder, scheduler, genome)
+make test-apocalypse   # Тесты режима Apocalypse, self-modifying, companion, undo
+make test-hardcore     # Хардкорные тесты Purgatory
 ```
 
 ---
