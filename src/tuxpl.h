@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "debruijn.h"
+#include "rns.h"
 
 #define TUXPL_VERSION "2.0.0"
 

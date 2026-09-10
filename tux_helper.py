@@ -259,6 +259,95 @@ def make_purgatory_text(text):
         cmds.append(("PRINT_CHAR", 0))
     return compile_cursed(cmds, is_purgatory=True)
 
+# ----------------------------------------------------------------------
+# De Bruijn Mealy Machine & RNS-CRT Engine (TuxPL 2.0 Academic Core)
+# ----------------------------------------------------------------------
+DEBRUIJN_ALPHABET = "TtUuXx"
+DEBRUIJN_NUM_STATES = 252
+DEBRUIJN_DEFAULT_SEED = 0x5A
+RNS_M = [7, 11, 13, 17, 19, 23]
+RNS_C = [6374082, 676039, 1144066, 5249244, 782782, 646646]
+RNS_MODULUS_M = 7436429
+
+def debruijn_char_to_idx(c):
+    return DEBRUIJN_ALPHABET.index(c) if c in DEBRUIJN_ALPHABET else -1
+
+def debruijn_transition(q, c):
+    idx = debruijn_char_to_idx(c)
+    if idx < 0:
+        return q
+    return (q * 6 + idx) % DEBRUIJN_NUM_STATES
+
+def debruijn_emit_opcode(q, c):
+    idx = debruijn_char_to_idx(c)
+    if idx < 0:
+        return 0xFF
+    return (q ^ (idx * 7)) % 42
+
+def debruijn_encode_fixed3(start_state, target_opcode):
+    if not (0 <= target_opcode < 42):
+        raise ValueError(f"Target opcode must be 0..41, got {target_opcode}")
+    for c0 in DEBRUIJN_ALPHABET:
+        q1 = debruijn_transition(start_state, c0)
+        for c1 in DEBRUIJN_ALPHABET:
+            q2 = debruijn_transition(q1, c1)
+            for c2 in DEBRUIJN_ALPHABET:
+                if debruijn_emit_opcode(q2, c2) == target_opcode:
+                    return c0 + c1 + c2
+    raise RuntimeError("No 3-step path found (mathematically impossible)")
+
+def debruijn_encode_shortest(start_state, target_opcode):
+    if not (0 <= target_opcode < 42):
+        raise ValueError(f"Target opcode must be 0..41, got {target_opcode}")
+    for c0 in DEBRUIJN_ALPHABET:
+        if debruijn_emit_opcode(start_state, c0) == target_opcode:
+            return c0
+    for c0 in DEBRUIJN_ALPHABET:
+        q1 = debruijn_transition(start_state, c0)
+        for c1 in DEBRUIJN_ALPHABET:
+            if debruijn_emit_opcode(q1, c1) == target_opcode:
+                return c0 + c1
+    return debruijn_encode_fixed3(start_state, target_opcode)
+
+def debruijn_resolve_sequence(start_state, seq):
+    q = start_state
+    op = 0xFF
+    for c in seq:
+        op = debruijn_emit_opcode(q, c)
+        q = debruijn_transition(q, c)
+    return op, q
+
+def rns_decompose(val):
+    if not (0 <= val < RNS_MODULUS_M):
+        raise ValueError(f"Value must be 0..{RNS_MODULUS_M - 1}, got {val}")
+    return [val % m for m in RNS_M]
+
+def rns_reconstruct(residues):
+    total = sum(r * c for r, c in zip(residues, RNS_C)) % RNS_MODULUS_M
+    return total
+
+def rns_encode_operand(val):
+    if not (0 <= val < RNS_MODULUS_M):
+        raise ValueError(f"Value must be 0..{RNS_MODULUS_M - 1}, got {val}")
+    res = []
+    for m in RNS_M:
+        r = val % m
+        res.append(DEBRUIJN_ALPHABET[r // 6])
+        res.append(DEBRUIJN_ALPHABET[r % 6])
+    return "".join(res)
+
+def rns_decode_operand(seq):
+    if len(seq) < 12:
+        raise ValueError(f"RNS operand sequence must be at least 12 chars, got {len(seq)}")
+    residues = []
+    for i in range(6):
+        d0 = debruijn_char_to_idx(seq[2 * i])
+        d1 = debruijn_char_to_idx(seq[2 * i + 1])
+        if d0 < 0 or d1 < 0:
+            raise ValueError(f"Invalid characters at residue {i}: {seq[2*i:2*i+2]}")
+        residues.append((d0 * 6 + d1) % RNS_M[i])
+    return rns_reconstruct(residues)
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "purgatory":
         msg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Hi"
@@ -288,6 +377,26 @@ if __name__ == "__main__":
         with open(tu_path, "wb") as f:
             f.write(tu_data)
         print(f"# Сгенерирован валидный Companion файл TuxPL 2.0: {tu_path} ({len(tu_data)} байт)")
+    elif len(sys.argv) > 1 and sys.argv[1] == "debruijn":
+        op = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+        q0 = int(sys.argv[3], 0) if len(sys.argv) > 3 else DEBRUIJN_DEFAULT_SEED
+        seq = debruijn_encode_fixed3(q0, op)
+        shortest = debruijn_encode_shortest(q0, op)
+        res_op, end_q = debruijn_resolve_sequence(q0, seq)
+        print(f"De Bruijn Opcode {op} (start q0={hex(q0)}):")
+        print(f"  Fixed-3:   {seq}  --> resolves to opcode {res_op} (end q={hex(end_q)})")
+        print(f"  Shortest:  {shortest}")
+    elif len(sys.argv) > 1 and sys.argv[1] == "rns-enc":
+        val = int(sys.argv[2]) if len(sys.argv) > 2 else 42
+        enc = rns_encode_operand(val)
+        print(f"RNS-CRT Encode {val} (M={RNS_MODULUS_M}):")
+        print(f"  12-char suffix: {enc}")
+        print(f"  Decoded back:   {rns_decode_operand(enc)}")
+    elif len(sys.argv) > 1 and sys.argv[1] == "rns-dec":
+        seq = sys.argv[2] if len(sys.argv) > 2 else "TTTTTTTTTTTT"
+        dec = rns_decode_operand(seq)
+        print(f"RNS-CRT Decode {seq}:")
+        print(f"  Decoded value: {dec}")
     elif len(sys.argv) > 1 and sys.argv[1] == "text":
         msg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Hi!"
         print(f"# Классический код TuxPL для текста: {msg}")
@@ -304,9 +413,12 @@ if __name__ == "__main__":
             print(f"  {o}")
     else:
         print("Использование:")
-        print("  python3 tux_helper.py purgatory \"Hi\"    # создать файл режима Purgatory")
-        print("  python3 tux_helper.py cursed \"Hi\"       # создать адский <bits>.tux файл")
-        print("  python3 tux_helper.py companion <f.tux> # создать .tu companion файл")
-        print("  python3 tux_helper.py word PUSH 42      # узнать слово TuxPL для PUSH 42")
-        print("  python3 tux_helper.py text \"Hello!\"     # классический код для --PLS")
-        print("  python3 tux_helper.py opcodes           # список всех опкодов TuxPL 2.0")
+        print("  python3 tux_helper.py purgatory \"Hi\"      # создать файл режима Purgatory")
+        print("  python3 tux_helper.py cursed \"Hi\"         # создать адский <bits>.tux файл")
+        print("  python3 tux_helper.py companion <f.tux>   # создать .tu companion файл")
+        print("  python3 tux_helper.py debruijn <op> [q0]  # синтез опкода через автомат де Брейна")
+        print("  python3 tux_helper.py rns-enc <number>    # кодирование операнда в RNS-12")
+        print("  python3 tux_helper.py rns-dec <12-chars>  # декодирование RNS-12 операнда")
+        print("  python3 tux_helper.py word PUSH 42        # узнать слово TuxPL для PUSH 42")
+        print("  python3 tux_helper.py text \"Hello!\"       # классический код для --PLS")
+        print("  python3 tux_helper.py opcodes             # список всех опкодов TuxPL 2.0")
