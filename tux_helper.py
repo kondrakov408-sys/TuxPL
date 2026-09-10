@@ -125,6 +125,122 @@ def compile_commands(cmds):
         lines.append(line)
     return "\n".join(lines)
 
+# ----------------------------------------------------------------------
+# Galois-Base64 Syndrome Verification (GBSV) Engine
+# ----------------------------------------------------------------------
+B64_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+ZETA_TABLE = ['!', '?', '~', '%', '&']
+TUX_SEED = b'~"TUX"'
+
+def _xtime(x: int) -> int:
+    return ((x << 1) ^ (0x1B if (x & 0x80) else 0)) & 0xFF
+
+_gf_exp = [0] * 512
+_gf_log = [0] * 256
+_gf_inv = [0] * 256
+
+_x = 1
+_gf_exp[0] = 1
+_gf_log[0] = 0
+_gf_log[1] = 0
+for _i in range(1, 255):
+    _x = _xtime(_x) ^ _x
+    _gf_exp[_i] = _x
+    _gf_log[_x] = _i
+
+for _i in range(255, 512):
+    _gf_exp[_i] = _gf_exp[_i - 255]
+
+_gf_inv[0] = 0
+for _i in range(1, 256):
+    _gf_inv[_i] = _gf_exp[255 - _gf_log[_i]]
+
+def gf_mul(a: int, b: int) -> int:
+    if a == 0 or b == 0:
+        return 0
+    return _gf_exp[_gf_log[a] + _gf_log[b]]
+
+def gf_inv(a: int) -> int:
+    return _gf_inv[a]
+
+def compute_b64(P: bytes) -> str:
+    N = len(P)
+    k_sum = sum(bin(b & 0xAA).count('1') for b in P)
+    k = k_sum % 64
+    shift = k % 6
+    M = (N * 8 + 5) // 6
+    acc = 0
+    for i in range(M):
+        bit_idx = i * 6
+        byte_idx = bit_idx // 8
+        bit_off = bit_idx % 8
+        b0 = P[byte_idx]
+        avail = 8 - bit_off
+        if avail >= 6:
+            chunk_i = (b0 >> (avail - 6)) & 0x3F
+        else:
+            needed = 6 - avail
+            part0 = (b0 & ((1 << avail) - 1)) << needed
+            b1 = P[byte_idx + 1] if byte_idx + 1 < N else 0
+            part1 = (b1 >> (8 - needed)) & ((1 << needed) - 1)
+            chunk_i = (part0 | part1) & 0x3F
+        if shift == 0:
+            val_i = chunk_i & 0x3F
+        else:
+            val_i = ((chunk_i << shift) | (chunk_i >> (6 - shift))) & 0x3F
+        acc = acc + (val_i ^ (i & 0x3F))
+    return B64_TABLE[acc % 64]
+
+def compute_gf(P: bytes) -> str:
+    N = len(P)
+    S = 0
+    for i in range(N):
+        exp_idx = (i + 1) % 255
+        alpha_pow = _gf_exp[exp_idx]
+        y_i = gf_mul(P[i], alpha_pow)
+        inv_y = _gf_inv[y_i]
+        S ^= inv_y
+    return chr(33 + (S % 94))
+
+def compute_tux(P: bytes) -> str:
+    N = len(P)
+    W = 0
+    for i in range(N):
+        W = (W + (P[i] << (i % 8))) & 0xFFFFFFFFFFFFFFFF
+    if W == 0:
+        return 'T'
+    nu_2 = (W & -W).bit_length() - 1
+    nu_3 = 0
+    tmp = W
+    while tmp % 3 == 0:
+        nu_3 += 1
+        tmp //= 3
+    if nu_3 > nu_2:
+        return 'X'
+    elif nu_2 > nu_3:
+        return 'U'
+    else:
+        return 'T'
+
+def compute_zeta(P_curr: bytes, P_prev: bytes) -> str:
+    if not P_prev:
+        P_prev = TUX_SEED
+    max_len = max(len(P_curr), len(P_prev))
+    d_H = 0
+    for j in range(max_len):
+        b1 = P_curr[j] if j < len(P_curr) else 0
+        b2 = P_prev[j] if j < len(P_prev) else 0
+        d_H += bin(b1 ^ b2).count('1')
+    return ZETA_TABLE[d_H % 5]
+
+def gbsv_calculate(P_curr: bytes, P_prev: bytes = None):
+    return (
+        compute_b64(P_curr),
+        compute_gf(P_curr),
+        compute_tux(P_curr),
+        compute_zeta(P_curr, P_prev)
+    )
+
 def compile_cursed(cmds, is_purgatory=False):
     """
     Адская компиляция (Cursed Mode / Purgatory Mode):
@@ -132,7 +248,7 @@ def compile_cursed(cmds, is_purgatory=False):
     - Обязательный импорт TuuuuuuuuX для Purgatory
     - Сакральная C-образная обвязка со всеми символами
     - Динамический цикл 1-2-3-4-5
-    - Контрольная буква T/U/X в конце каждой строки
+    - Обязательный криптографический GBSV терминатор строки
     - Валидация Whitespace Parity (в Purgatory Mode)
     """
     words = []
@@ -164,6 +280,7 @@ def compile_cursed(cmds, is_purgatory=False):
     lines_body = []
     cmd_idx = 0
     line_idx = 1
+    prev_prefix = None
     while cmd_idx < len(words):
         target = ((line_idx - 1) % 5) + 1
         chunk = words[cmd_idx:cmd_idx + target]
@@ -186,13 +303,15 @@ def compile_cursed(cmds, is_purgatory=False):
             else:
                 body += " "
         full_pfx = pfx + body
-        chk = calc_tux_checksum(len(full_pfx.encode('utf-8')) * 8)
-        line = f"{full_pfx}:{chk};!?}}"
+        pfx_bytes = full_pfx.encode('utf-8')
+        b64, gf, tux, zeta = gbsv_calculate(pfx_bytes, prev_prefix)
+        line = f"{full_pfx}:[{b64}|{gf}|{tux}];{zeta}}}"
         if is_purgatory:
             ws_count = sum(1 for c in line if c in " \t")
             if (ws_count % 2) != (line_idx % 2):
                 line += " "
         lines_body.append(line)
+        prev_prefix = pfx_bytes
         line_idx += 1
 
     imports = []

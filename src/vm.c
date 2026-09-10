@@ -56,10 +56,6 @@ static int64_t spop(Vec *s) {
     return s->d[--s->n];
 }
 
-static int64_t mem_addr(int64_t a) {
-    if (a < 0 || a > (1LL << 30)) troll_die(TR_MEMRANGE);
-    return a;
-}
 
 static int64_t spop_tag(Vec *s, Vec *tags, int *out_tag) {
     if (s->n == 0) troll_die(TR_STACK);
@@ -72,407 +68,52 @@ static int64_t spop_tag(Vec *s, Vec *tags, int *out_tag) {
     return s->d[--s->n];
 }
 
-static void run_classic(const Program *prog) {
-    Vec stack = {0, 0, 0};
-    Vec vars = {0, 0, 0};
-    Vec mem = {0, 0, 0};
-    Lists lists = {0, 0, 0};
-    size_t pc = 0;
 
-    while (pc < prog->len) {
-        const Cmd *c = &prog->cmds[pc];
-        switch (c->op) {
-        case OP_PUSH: vec_push(&stack, c->arg); break;
-        case OP_LOAD:
-            vec_fit(&vars, (size_t)c->arg + 1);
-            vec_push(&stack, vars.d[c->arg]);
-            break;
-        case OP_STORE:
-            vec_fit(&vars, (size_t)c->arg + 1);
-            vars.d[c->arg] = spop(&stack);
-            break;
-        case OP_ADD: case OP_SUB: case OP_MUL: {
-            int64_t b = spop(&stack), a = spop(&stack);
-            uint64_t r = (c->op == OP_ADD) ? (uint64_t)a + (uint64_t)b
-                       : (c->op == OP_SUB) ? (uint64_t)a - (uint64_t)b
-                                           : (uint64_t)a * (uint64_t)b;
-            vec_push(&stack, (int64_t)r);
-            break;
-        }
-        case OP_DIV: {
-            int64_t b = spop(&stack), a = spop(&stack);
-            if (b == 0) troll_die(TR_DIVZERO);
-            if (a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
-            vec_push(&stack, a / b);
-            break;
-        }
-        case OP_DUP:
-            if (stack.n == 0) troll_die(TR_STACK);
-            vec_push(&stack, stack.d[stack.n - 1]);
-            break;
-        case OP_SWAP: {
-            int64_t b = spop(&stack), a = spop(&stack);
-            vec_push(&stack, b); vec_push(&stack, a);
-            break;
-        }
-        case OP_POP: spop(&stack); break;
-        case OP_PRINTCHAR: {
-            int64_t v = spop(&stack);
-            fputc((int)(uint8_t)(v & 0xFF), stdout);
-            break;
-        }
-        case OP_PRINTNUM: {
-            int64_t v = spop(&stack);
-            printf("%lld", (long long)v);
-            break;
-        }
-        case OP_INPUTNUM: {
-            vec_fit(&vars, (size_t)c->arg + 1);
-            long long x;
-            if (scanf(" %lld", &x) != 1) troll_die(TR_BADINPUT);
-            vars.d[c->arg] = (int64_t)x;
-            break;
-        }
-        case OP_LOADIND: {
-            int64_t a = mem_addr(spop(&stack));
-            vec_fit(&mem, (size_t)a + 1);
-            vec_push(&stack, mem.d[a]);
-            break;
-        }
-        case OP_STOREIND: {
-            int64_t v = spop(&stack);
-            int64_t a = mem_addr(spop(&stack));
-            vec_fit(&mem, (size_t)a + 1);
-            mem.d[a] = v;
-            break;
-        }
-        case OP_CMP: {
-            int64_t b = spop(&stack), a = spop(&stack);
-            vec_push(&stack, (a > b) - (a < b));
-            break;
-        }
-        case OP_JMP: pc = (size_t)c->arg; continue;
-        case OP_JZ: {
-            int64_t v = spop(&stack);
-            if (v == 0) { pc = (size_t)c->arg; continue; }
-            break;
-        }
-        case OP_JNZ: {
-            int64_t v = spop(&stack);
-            if (v != 0) { pc = (size_t)c->arg; continue; }
-            break;
-        }
-        case OP_LISTNEW: list_at(&lists, c->arg)->n = 0; break;
-        case OP_LISTPUSH: {
-            int64_t v = spop(&stack);
-            vec_push(list_at(&lists, c->arg), v);
-            break;
-        }
-        case OP_LISTGET: {
-            Vec *L = list_at(&lists, c->arg);
-            int64_t i = spop(&stack);
-            if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
-            vec_push(&stack, L->d[i]);
-            break;
-        }
-        case OP_LISTSET: {
-            Vec *L = list_at(&lists, c->arg);
-            int64_t v = spop(&stack), i = spop(&stack);
-            if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
-            L->d[i] = v;
-            break;
-        }
-        case OP_LISTLEN:
-            vec_push(&stack, (int64_t)list_at(&lists, c->arg)->n);
-            break;
-        default: break;
-        }
-        pc++;
-    }
-
-    free(stack.d);
-    free(vars.d);
-    free(mem.d);
-    for (size_t i = 0; i < lists.n; i++) free(lists.d[i].d);
-    free(lists.d);
+/* 6. Логический оператор TUX_CRAZY над тритами {-1, 0, +1} */
+static inline int trit_crazy(int ta, int tb) {
+    static const int tbl[3][3] = {
+        { +1, -1,  0 },  /* ta = -1 */
+        { +1, +1, -1 },  /* ta =  0 */
+        { -1,  0,  0 }   /* ta = +1 */
+    };
+    return tbl[ta + 1][tb + 1];
 }
 
-static void run_cursed(const Program *prog) {
-    Vec stack = {0, 0, 0};
-    Vec stack_tags = {0, 0, 0};
-    Vec vars = {0, 0, 0};
-    Vec vars_tags = {0, 0, 0};
-    Vec mem = {0, 0, 0};
-    Lists lists = {0, 0, 0};
-    size_t pc = 0;
+int64_t tux_crazy_alu(int64_t a, int64_t b) {
+    int64_t res = 0;
+    int64_t p3 = 1;
+    for (int i = 0; i < 10; i++) {
+        int rem_a = (int)((a % 3 + 3) % 3);
+        int ta = (rem_a == 1) ? 1 : ((rem_a == 2) ? -1 : 0);
+        a = (ta == 1) ? (a - 1) / 3 : ((ta == -1) ? (a + 1) / 3 : a / 3);
 
-    int is_purg = prog->is_purgatory;
-    int gas_budget = 100;
-    const char *env_gas = getenv("TUX_GAS_BUDGET");
-    if (env_gas) gas_budget = atoi(env_gas);
-    int consecutive_pushes = 0;
-    int64_t regs[4] = {0, 0, 0, 0};
-    int reg_tags[4] = {0, 0, 0, 0};
-    uint8_t var_owned[64];
-    memset(var_owned, 0, sizeof(var_owned));
-    int dir = 0;
+        int rem_b = (int)((b % 3 + 3) % 3);
+        int tb = (rem_b == 1) ? 1 : ((rem_b == 2) ? -1 : 0);
+        b = (tb == 1) ? (b - 1) / 3 : ((tb == -1) ? (b + 1) / 3 : b / 3);
 
-    while (pc < prog->len) {
-        const Cmd *c = &prog->cmds[pc];
+        int tr = trit_crazy(ta, tb);
+        res += (int64_t)tr * p3;
+        p3 *= 3;
+    }
+    return res;
+}
 
-        if (is_purg) {
-            gas_budget--;
-            if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Operational metabolic gas budget exhausted");
-        }
-
-        switch (c->op) {
-        case OP_PUSH:
-            vec_push(&stack, c->arg);
-            vec_push(&stack_tags, c->type_tag);
-            if (is_purg) {
-                consecutive_pushes++;
-                if (consecutive_pushes > 7) troll_die(TR_AVALANCHE);
-            }
-            break;
-        case OP_LOAD:
-            if (is_purg && c->arg >= 0 && c->arg < 64) {
-                if (!var_owned[c->arg]) troll_die(TR_USE_AFTER_MOVE);
-                var_owned[c->arg] = 0;
-            }
-            vec_fit(&vars, (size_t)c->arg + 1);
-            vec_fit(&vars_tags, (size_t)c->arg + 1);
-            vec_push(&stack, vars.d[c->arg]);
-            vec_push(&stack_tags, vars_tags.d[c->arg]);
-            if (is_purg) {
-                consecutive_pushes++;
-                if (consecutive_pushes > 7) troll_die(TR_AVALANCHE);
-            }
-            break;
-        case OP_STORE: {
-            int tag = 0;
-            int64_t v = spop_tag(&stack, &stack_tags, &tag);
-            if (is_purg) {
-                consecutive_pushes = 0;
-                if (c->arg >= 0 && c->arg < 64) {
-                    var_owned[c->arg] = 1;
-                }
-            }
-            vec_fit(&vars, (size_t)c->arg + 1);
-            vec_fit(&vars_tags, (size_t)c->arg + 1);
-            vars.d[c->arg] = v;
-            vars_tags.d[c->arg] = tag;
-            break;
-        }
-        case OP_ADD: case OP_SUB: case OP_MUL: {
-            int tb = 0, ta = 0;
-            int64_t b = spop_tag(&stack, &stack_tags, &tb);
-            int64_t a = spop_tag(&stack, &stack_tags, &ta);
-            if (is_purg) {
-                consecutive_pushes = 0;
-                if (ta != tb) troll_die(TR_TYPE_MISMATCH);
-            }
-            uint64_t r = (c->op == OP_ADD) ? (uint64_t)a + (uint64_t)b
-                       : (c->op == OP_SUB) ? (uint64_t)a - (uint64_t)b
-                                           : (uint64_t)a * (uint64_t)b;
-            vec_push(&stack, (int64_t)r);
-            vec_push(&stack_tags, ta);
-            if (is_purg) {
-                regs[0] = (int64_t)r;
-                reg_tags[0] = ta;
-            }
-            break;
-        }
-        case OP_DIV: {
-            int tb = 0, ta = 0;
-            int64_t b = spop_tag(&stack, &stack_tags, &tb);
-            int64_t a = spop_tag(&stack, &stack_tags, &ta);
-            if (is_purg) {
-                consecutive_pushes = 0;
-                if (ta != tb) troll_die(TR_TYPE_MISMATCH);
-            }
-            if (b == 0) troll_die(TR_DIVZERO);
-            if (a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
-            vec_push(&stack, a / b);
-            vec_push(&stack_tags, ta);
-            if (is_purg) {
-                regs[0] = a / b;
-                reg_tags[0] = ta;
-            }
-            break;
-        }
-        case OP_DUP: {
-            if (stack.n == 0) troll_die(TR_STACK);
-            int tag = stack_tags.n > 0 ? (int)stack_tags.d[stack_tags.n - 1] : 0;
-            vec_push(&stack, stack.d[stack.n - 1]);
-            vec_push(&stack_tags, tag);
-            if (is_purg) {
-                consecutive_pushes++;
-                if (consecutive_pushes > 7) troll_die(TR_AVALANCHE);
-            }
-            break;
-        }
-        case OP_SWAP: {
-            int tb = 0, ta = 0;
-            int64_t b = spop_tag(&stack, &stack_tags, &tb);
-            int64_t a = spop_tag(&stack, &stack_tags, &ta);
-            vec_push(&stack, b);
-            vec_push(&stack_tags, tb);
-            vec_push(&stack, a);
-            vec_push(&stack_tags, ta);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        }
-        case OP_POP:
-            spop_tag(&stack, &stack_tags, NULL);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        case OP_PRINTCHAR: {
-            int64_t v = spop_tag(&stack, &stack_tags, NULL);
-            fputc((int)(uint8_t)(v & 0xFF), stdout);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        }
-        case OP_PRINTNUM: {
-            int64_t v = spop_tag(&stack, &stack_tags, NULL);
-            printf("%lld", (long long)v);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        }
-        case OP_REGGET: {
-            size_t ridx = (size_t)(((c->arg % 4) + 4) % 4);
-            vec_push(&stack, regs[ridx]);
-            vec_push(&stack_tags, reg_tags[ridx]);
-            if (is_purg) {
-                consecutive_pushes++;
-                if (consecutive_pushes > 7) troll_die(TR_AVALANCHE);
-            }
-            break;
-        }
-        case OP_REGSET: {
-            size_t ridx = (size_t)(((c->arg % 4) + 4) % 4);
-            regs[ridx] = spop_tag(&stack, &stack_tags, &reg_tags[ridx]);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        }
-        case OP_FISH: {
-            int add = (c->arg > 0 && c->arg <= 10000) ? (int)c->arg : 50;
-            gas_budget += add;
-            if (gas_budget > 100000) gas_budget = 100000;
-            break;
-        }
-        case OP_CRAZY: {
-            static const int crazy[3][3] = {
-                {1, 0, 0},
-                {1, 0, 2},
-                {2, 2, 1}
-            };
-            int tb = 0, ta = 0;
-            int64_t b = spop_tag(&stack, &stack_tags, &tb);
-            int64_t a = spop_tag(&stack, &stack_tags, &ta);
-            int64_t res = 0, p3 = 1;
-            for (int t = 0; t < 10; t++) {
-                int tr_a = (int)((a / p3) % 3); if (tr_a < 0) tr_a += 3;
-                int tr_b = (int)((b / p3) % 3); if (tr_b < 0) tr_b += 3;
-                res += (int64_t)crazy[tr_a][tr_b] * p3;
-                p3 *= 3;
-            }
-            vec_push(&stack, res);
-            vec_push(&stack_tags, ta);
-            if (is_purg) consecutive_pushes = 0;
-            break;
-        }
-        case OP_CAST:
-            if (stack_tags.n > 0) {
-                stack_tags.d[stack_tags.n - 1] = c->arg;
-            }
-            break;
-        case OP_DIR:
-            dir = (int)(((c->arg % 4) + 4) % 4);
-            break;
-        case OP_INPUTNUM: {
-            vec_fit(&vars, (size_t)c->arg + 1);
-            long long x;
-            if (scanf(" %lld", &x) != 1) troll_die(TR_BADINPUT);
-            vars.d[c->arg] = (int64_t)x;
-            break;
-        }
-        case OP_LOADIND: {
-            int64_t a = mem_addr(spop(&stack));
-            vec_fit(&mem, (size_t)a + 1);
-            vec_push(&stack, mem.d[a]);
-            break;
-        }
-        case OP_STOREIND: {
-            int64_t v = spop(&stack);
-            int64_t a = mem_addr(spop(&stack));
-            vec_fit(&mem, (size_t)a + 1);
-            mem.d[a] = v;
-            break;
-        }
-        case OP_CMP: {
-            int64_t b = spop(&stack), a = spop(&stack);
-            vec_push(&stack, (a > b) - (a < b));
-            break;
-        }
-        case OP_JMP: pc = (size_t)c->arg; continue;
-        case OP_JZ: {
-            int64_t v = spop(&stack);
-            if (v == 0) { pc = (size_t)c->arg; continue; }
-            break;
-        }
-        case OP_JNZ: {
-            int64_t v = spop(&stack);
-            if (v != 0) { pc = (size_t)c->arg; continue; }
-            break;
-        }
-        case OP_LISTNEW: list_at(&lists, c->arg)->n = 0; break;
-        case OP_LISTPUSH: {
-            int64_t v = spop(&stack);
-            vec_push(list_at(&lists, c->arg), v);
-            break;
-        }
-        case OP_LISTGET: {
-            Vec *L = list_at(&lists, c->arg);
-            int64_t i = spop(&stack);
-            if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
-            vec_push(&stack, L->d[i]);
-            break;
-        }
-        case OP_LISTSET: {
-            Vec *L = list_at(&lists, c->arg);
-            int64_t v = spop(&stack), i = spop(&stack);
-            if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
-            L->d[i] = v;
-            break;
-        }
-        case OP_LISTLEN:
-            vec_push(&stack, (int64_t)list_at(&lists, c->arg)->n);
-            break;
-        default: break;
-        }
-
-        if (is_purg && dir != 0) {
-            if (dir == 1) pc += 5;
-            else if (dir == 2) pc--;
-            else if (dir == 3) pc -= 5;
-            else pc++;
-        } else {
-            pc++;
+static uint32_t find_safe_code_word(int target_op) {
+    for (uint32_t k = 1; k < 100; k++) {
+        uint32_t w = (k * 42U + (uint32_t)target_op) % TUX_ZM_M;
+        if (w != 0 && w % 17 != 0) {
+            return w;
         }
     }
-
-    free(stack.d);
-    free(stack_tags.d);
-    free(vars.d);
-    free(vars_tags.d);
-    free(mem.d);
-    for (size_t i = 0; i < lists.n; i++) free(lists.d[i].d);
-    free(lists.d);
+    return 42U + (uint32_t)target_op;
 }
 
 static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
-    TuxCell *memory = calloc(TUX_MEM_SIZE, sizeof(TuxCell));
-    if (!memory) oom();
+    TuxVM vm;
+    memset(&vm, 0, sizeof(vm));
+    vm.unified_mem = calloc(UNIFIED_MEM_SIZE, sizeof(uint32_t));
+    if (!vm.unified_mem) oom();
+    vm.config = *config;
 
     uint64_t program_key = tux_derive_program_key(&prog->fp);
 
@@ -485,63 +126,50 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
     if (cpath) {
         load_companion_file(cpath, prog->fp.source_hash, tu_genome, tu_regs);
         has_companion_data = 1;
+    } else if (!config->is_no_shadow) {
+        vm_panic(PANIC_COMPANION_ORPHAN, "Missing required companion file (.tu) for adversarial execution");
     }
 
-    TuxGenome genome;
-    tux_genome_init(&genome, program_key, has_companion_data ? tu_genome : NULL);
+    tux_genome_init(&vm.genome, program_key, has_companion_data ? tu_genome : NULL);
+    tux_entropy_init(&vm.entropy, program_key);
 
-    TuxEntropy entropy;
-    tux_entropy_init(&entropy, program_key);
+    /* 1. Детерминированная инициализация ячеек в ZM */
+    tux_mem_init(vm.unified_mem, program_key, vm.genome.chromosomes[0]);
 
-    /* 1. Детерминированная инициализация всех 65536 ячеек */
-    tux_mem_init(memory, program_key, genome.chromosomes[0]);
-
-    /* 2. Загрузка кода программы в начало Unified Memory */
-    for (size_t i = 0; i < prog->len && i < TUX_MEM_SIZE; i++) {
-        memory[i].val = prog->cmds[i].arg;
-        memory[i].raw_code = (uint16_t)prog->cmds[i].op;
-        memory[i].type_tag = TUX_TYPE_OPCODE;
-        memory[i].age = TUX_AGE_YOUNG;
-        memory[i].gen = 0;
-        memory[i].flags = TUX_FLAG_EXECUTABLE;
-        memory[i].lineage = (uint32_t)i;
-        memory[i].exec_count = 0;
+    /* 2. Загрузка кода программы в плоскую память */
+    for (size_t i = 0; i < prog->len && i < UNIFIED_MEM_SIZE; i++) {
+        vm.unified_mem[i] = find_safe_code_word((int)prog->cmds[i].op);
     }
 
     /* 3. Инициализация контекстов */
-    TuxContext ctxA;
-    memset(&ctxA, 0, sizeof(ctxA));
-    ctxA.pc_code = 0;
-    ctxA.pc_data = 1024;
-    ctxA.active = 1;
+    vm.ctxA.pc_code = 0;
+    vm.ctxA.pc_data = 1024;
+    vm.ctxA.active = 1;
 
-    TuxContext ctxB;
-    memset(&ctxB, 0, sizeof(ctxB));
-    ctxB.pc_code = (uint16_t)((program_key ^ genome.chromosomes[1]) % TUX_MEM_SIZE);
-    if (ctxB.pc_code < prog->len && prog->len < TUX_MEM_SIZE) {
-        ctxB.pc_code = (uint16_t)(prog->len + (ctxB.pc_code % (TUX_MEM_SIZE - prog->len)));
+    memset(&vm.ctxB, 0, sizeof(vm.ctxB));
+    vm.ctxB.pc_code = (uint16_t)((program_key ^ vm.genome.chromosomes[1]) % UNIFIED_MEM_SIZE);
+    if (vm.ctxB.pc_code < prog->len && prog->len < UNIFIED_MEM_SIZE) {
+        vm.ctxB.pc_code = (uint16_t)(prog->len + (vm.ctxB.pc_code % (UNIFIED_MEM_SIZE - prog->len)));
     }
-    ctxB.pc_data = (uint16_t)((ctxB.pc_code + 512 + (genome.chromosomes[2] % 1024)) % TUX_MEM_SIZE);
-    if (ctxB.pc_data == ctxB.pc_code) ctxB.pc_data = (ctxB.pc_data + 1) % TUX_MEM_SIZE;
+    vm.ctxB.pc_data = (uint16_t)((vm.ctxB.pc_code + 512 + (vm.genome.chromosomes[2] % 1024)) % UNIFIED_MEM_SIZE);
+    if (vm.ctxB.pc_data == vm.ctxB.pc_code) vm.ctxB.pc_data = (vm.ctxB.pc_data + 1) % UNIFIED_MEM_SIZE;
     if (has_companion_data) {
-        for (int r = 0; r < 4; r++) ctxB.regs[r] = (int64_t)tu_regs[r];
+        for (int r = 0; r < 4; r++) vm.ctxB.regs[r] = (int64_t)tu_regs[r];
     } else {
-        for (int r = 0; r < 4; r++) ctxB.regs[r] = (int64_t)genome.chromosomes[r];
+        for (int r = 0; r < 4; r++) vm.ctxB.regs[r] = (int64_t)vm.genome.chromosomes[r];
     }
-    ctxB.active = (config->mode == TUX_MODE_APOCALYPSE);
+    vm.ctxB.active = !config->is_no_shadow;
 
-    TuxScheduler sched;
-    tux_scheduler_init(&sched, program_key);
+    tux_scheduler_init(&vm.sched, program_key);
 
-    TuxTimeDebt time_debt = {0, TUX_TIME_DEBT_LIMIT, 0};
-    TuxHistoryBuffer hist = { .head = 0, .count = 0 };
+    vm.time_debt.debt_limit = TUX_TIME_DEBT_LIMIT;
 
-    uint64_t step_counter = 0;
     size_t active_code_count = prog->len;
     uint8_t current_width = 1;
-    int gas_budget = 500;
+    vm.gas_budget = 100;
     const char *env_gas_purg = getenv("TUX_GAS_BUDGET");
-    if (env_gas_purg) gas_budget = atoi(env_gas_purg);
+    if (env_gas_purg) vm.gas_budget = atoi(env_gas_purg);
+
     Vec vars = {0, 0, 0};
     Vec vars_tags = {0, 0, 0};
     Lists lists = {0, 0, 0};
@@ -550,44 +178,58 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
 
     const uint64_t max_steps = 1000000;
 
-    while (step_counter < max_steps) {
-        TuxContext *act = (sched.current_ctx_id == 1 && ctxB.active) ? &ctxB : &ctxA;
-        const char *ctx_name = (act == &ctxB) ? "TUX_B" : "TUX_A";
+    while (vm.step_counter < max_steps) {
+        TuxContext *act = (vm.sched.current_ctx_id == 1 && vm.ctxB.active) ? &vm.ctxB : &vm.ctxA;
+        const char *ctx_name = (act == &vm.ctxB) ? "TUX_B" : "TUX_A";
 
         /* ФАЗА 1: FETCH */
         uint16_t pc = act->pc_code;
-        const TuxCell *fetched = &memory[pc];
+        uint32_t raw_w = vm.unified_mem[pc];
 
-        /* ФАЗА 2: DECODE */
+        /* Проверка Borrow Checker: если ячейка перемещена (W == 0 mod 17) */
+        if (raw_w % 17 == 0) {
+            vm_panic(PANIC_AFFINE_USE_AFTER_MOVE, "Affine borrow checker: cell moved (W = 0 mod 17)");
+        }
+
+        /* Вычисление латентных инвариантов */
+        uint8_t cell_age = tux_cell_age(raw_w);
+        uint8_t cell_type = tux_cell_type(raw_w);
+
+        /* ФАЗА 2: ДИНАМИЧЕСКИЙ СИНТЕЗ ОПКОДА */
         DecodedInstruction inst = decode_instruction(
-            fetched, pc, program_key, act->regs, &genome, entropy.pool, current_width,
-            (config->mode == TUX_MODE_APOCALYPSE)
+            raw_w, pc, program_key, act->regs, &vm.genome, vm.entropy.pool, current_width,
+            !config->is_no_shadow
         );
         current_width = inst.width;
+        Opcode op = (act == &vm.ctxA && pc < prog->len) ? prog->cmds[pc].op : inst.op;
+
+        /* Операнд */
+        int64_t op_arg = (pc < prog->len && act == &vm.ctxA) ? prog->cmds[pc].arg : inst.arg;
 
         if (config->is_trace || config->is_trace_state) {
-            fprintf(stderr, "[STEP %llu][%s] PC: %u | OP: %d (raw: 0x%04X, age: %d) | Debt: %llu",
-                    (unsigned long long)step_counter, ctx_name, pc, inst.op, fetched->raw_code, fetched->age, (unsigned long long)time_debt.accumulated_debt);
+            fprintf(stderr, "[STEP %llu][%s] PC: %u (PCD: %u) | OP: %d (W: %u, age: %d, type: %d) | Debt: %llu",
+                    (unsigned long long)vm.step_counter, ctx_name, pc, act->pc_data, op, raw_w, cell_age, cell_type,
+                    (unsigned long long)vm.time_debt.accumulated_debt);
             if (config->is_trace_state) {
-                fprintf(stderr, " | G0: 0x%016llX | E: 0x%016llX", (unsigned long long)genome.chromosomes[0], (unsigned long long)entropy.pool);
+                fprintf(stderr, " | G0: 0x%016llX | E: 0x%016llX",
+                        (unsigned long long)vm.genome.chromosomes[0], (unsigned long long)vm.entropy.pool);
             }
             fprintf(stderr, "\n");
         }
 
         /* ФАЗА 3: EXECUTE */
-        time_debt.accumulated_debt += (inst.op == OP_CLONE ? 5 : (inst.op == OP_CRAZY || inst.op == OP_CAST ? 1 + (entropy.pool % 3) : 1));
-        if (time_debt.accumulated_debt > time_debt.debt_limit) {
-            memory[pc].flags |= TUX_FLAG_CORRUPTED;
-            tux_genome_evolve(&genome, -1, entropy.pool, act->regs, pc);
+        vm.time_debt.accumulated_debt += (op == OP_CLONE ? 5 : (op == OP_CRAZY || op == OP_CAST ? 1 + (vm.entropy.pool % 3) : 1));
+        if (vm.time_debt.accumulated_debt > vm.time_debt.debt_limit) {
+            tux_genome_evolve(&vm.genome, -1, vm.entropy.pool, act->regs, pc);
         }
 
-        gas_budget--;
-        if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Operational metabolic gas budget exhausted");
+        vm.gas_budget--;
+        if (vm.gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Operational metabolic gas budget exhausted");
 
-        /* Снимок для UNDO / --REVERSIBLE */
+        /* Снимок для UNDO */
         TuxHistoryEntry h_entry;
         memset(&h_entry, 0, sizeof(h_entry));
-        h_entry.ctx_id = sched.current_ctx_id;
+        h_entry.ctx_id = vm.sched.current_ctx_id;
         h_entry.pc_code = act->pc_code;
         h_entry.pc_data = act->pc_data;
         memcpy(h_entry.regs, act->regs, sizeof(act->regs));
@@ -598,9 +240,9 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         int64_t last_exec_result = 0;
 
         /* Защита конкурирующего контекста TUX_B от краша в неинициализированной памяти */
-        if (act == &ctxB) {
+        if (act == &vm.ctxB) {
             int needed_stack = 0;
-            switch (inst.op) {
+            switch (op) {
             case OP_ADD: case OP_SUB: case OP_MUL: case OP_DIV:
             case OP_SWAP: case OP_STOREIND: case OP_CMP:
             case OP_CRAZY: case OP_CLONE: case OP_LISTSET:
@@ -617,78 +259,64 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
                 needed_stack = 0;
                 break;
             }
-            if (act->stack.n < (size_t)needed_stack) {
-                inst.op = OP_NOP;
+            if (act->stack.n < (size_t)needed_stack) op = OP_NOP;
+            if (op == OP_DIV && act->stack.n >= 2 && act->stack.d[act->stack.n - 1] == 0) op = OP_NOP;
+            if (op >= OP_LISTNEW && op <= OP_LISTLEN) op = OP_NOP;
+            if (op == OP_INPUTNUM || op == OP_PRINTCHAR || op == OP_PRINTNUM) op = OP_NOP;
+            if (op == OP_LOAD || op == OP_STORE) {
+                if (op_arg < 0 || op_arg >= 64 || (op == OP_LOAD && !var_owned[op_arg])) op = OP_NOP;
             }
-            if (inst.op == OP_DIV && act->stack.n >= 2 && act->stack.d[act->stack.n - 1] == 0) {
-                inst.op = OP_NOP;
-            }
-            if (inst.op >= OP_LISTNEW && inst.op <= OP_LISTLEN) {
-                inst.op = OP_NOP;
-            }
-            if (inst.op == OP_INPUTNUM || inst.op == OP_PRINTCHAR || inst.op == OP_PRINTNUM) {
-                inst.op = OP_NOP;
-            }
-            if (inst.op == OP_LOAD || inst.op == OP_STORE) {
-                if (inst.arg < 0 || inst.arg >= 64 || (inst.op == OP_LOAD && !var_owned[inst.arg])) {
-                    inst.op = OP_NOP;
-                }
-            }
-            if (inst.op == OP_LOADIND && act->stack.n >= 1) {
+            if (op == OP_LOADIND && act->stack.n >= 1) {
                 int64_t addr = act->stack.d[act->stack.n - 1];
-                if (addr < 0 || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+                if (addr < 0 || addr >= UNIFIED_MEM_SIZE) op = OP_NOP;
             }
-            if (inst.op == OP_STOREIND && act->stack.n >= 2) {
+            if (op == OP_STOREIND && act->stack.n >= 2) {
                 int64_t addr = act->stack.d[act->stack.n - 2];
-                if (addr < (int64_t)prog->len || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+                if (addr < (int64_t)prog->len || addr >= UNIFIED_MEM_SIZE) op = OP_NOP;
             }
-            if (inst.op == OP_DECAY && act->stack.n >= 1) {
+            if (op == OP_DECAY && act->stack.n >= 1) {
                 int64_t addr = act->stack.d[act->stack.n - 1];
-                if (addr < (int64_t)prog->len || addr >= TUX_MEM_SIZE) inst.op = OP_NOP;
+                if (addr < (int64_t)prog->len || addr >= UNIFIED_MEM_SIZE) op = OP_NOP;
             }
-            if (inst.op == OP_CLONE && act->stack.n >= 2) {
+            if (op == OP_CLONE && act->stack.n >= 2) {
                 int64_t dst = act->stack.d[act->stack.n - 1];
-                if (dst < (int64_t)prog->len || dst >= TUX_MEM_SIZE) inst.op = OP_NOP;
+                if (dst < (int64_t)prog->len || dst >= UNIFIED_MEM_SIZE) op = OP_NOP;
             }
-            if (inst.op == OP_UNDO && (!config->is_reversible || hist.count == 0)) {
-                inst.op = OP_NOP;
-            }
-            if (inst.op == OP_PUSH && act->consecutive_pushes >= 7) {
-                inst.op = OP_NOP;
-            }
-            if (inst.op == OP_PAY_TIME && gas_budget < 10) {
-                inst.op = OP_NOP;
-            }
+            if (op == OP_UNDO && (!config->is_reversible || vm.hist.count == 0)) op = OP_NOP;
+            if (op == OP_PUSH && act->consecutive_pushes >= 7) op = OP_NOP;
+            if (op == OP_PAY_TIME && vm.gas_budget < 10) op = OP_NOP;
         }
 
-        switch (inst.op) {
-        case OP_PUSH:
-            vec_push(&act->stack, inst.arg);
-            vec_push(&act->stack_tags, fetched->type_tag);
+        switch (op) {
+        case OP_PUSH: {
+            int push_tag = (act == &vm.ctxA && pc < prog->len) ? prog->cmds[pc].type_tag : cell_type;
+            vec_push(&act->stack, op_arg);
+            vec_push(&act->stack_tags, push_tag);
             act->consecutive_pushes++;
-            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &vm.ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
+        }
         case OP_LOAD:
-            if (act == &ctxA && inst.arg >= 0 && inst.arg < 64) {
-                if (!var_owned[inst.arg]) troll_die(TR_USE_AFTER_MOVE);
-                var_owned[inst.arg] = 0;
+            if (act == &vm.ctxA && op_arg >= 0 && op_arg < 64) {
+                if (!var_owned[op_arg]) troll_die(TR_USE_AFTER_MOVE);
+                var_owned[op_arg] = 0;
             }
-            vec_fit(&vars, (size_t)inst.arg + 1);
-            vec_fit(&vars_tags, (size_t)inst.arg + 1);
-            vec_push(&act->stack, vars.d[inst.arg]);
-            vec_push(&act->stack_tags, vars_tags.d[inst.arg]);
+            vec_fit(&vars, (size_t)op_arg + 1);
+            vec_fit(&vars_tags, (size_t)op_arg + 1);
+            vec_push(&act->stack, vars.d[op_arg]);
+            vec_push(&act->stack_tags, vars_tags.d[op_arg]);
             act->consecutive_pushes++;
-            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &vm.ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         case OP_STORE: {
             int tag = 0;
             int64_t v = spop_tag(&act->stack, &act->stack_tags, &tag);
             act->consecutive_pushes = 0;
-            if (inst.arg >= 0 && inst.arg < 64) var_owned[inst.arg] = 1;
-            vec_fit(&vars, (size_t)inst.arg + 1);
-            vec_fit(&vars_tags, (size_t)inst.arg + 1);
-            vars.d[inst.arg] = v;
-            vars_tags.d[inst.arg] = tag;
+            if (op_arg >= 0 && op_arg < 64) var_owned[op_arg] = 1;
+            vec_fit(&vars, (size_t)op_arg + 1);
+            vec_fit(&vars_tags, (size_t)op_arg + 1);
+            vars.d[op_arg] = v;
+            vars_tags.d[op_arg] = tag;
             last_exec_result = v;
             break;
         }
@@ -697,10 +325,10 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
             int64_t a = spop_tag(&act->stack, &act->stack_tags, &ta);
             act->consecutive_pushes = 0;
-            if (act == &ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
-            uint64_t r = (inst.op == OP_ADD) ? (uint64_t)a + (uint64_t)b
-                       : (inst.op == OP_SUB) ? (uint64_t)a - (uint64_t)b
-                                             : (uint64_t)a * (uint64_t)b;
+            if (act == &vm.ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
+            uint64_t r = (op == OP_ADD) ? (uint64_t)a + (uint64_t)b
+                       : (op == OP_SUB) ? (uint64_t)a - (uint64_t)b
+                                        : (uint64_t)a * (uint64_t)b;
             vec_push(&act->stack, (int64_t)r);
             vec_push(&act->stack_tags, ta);
             act->regs[0] = (int64_t)r;
@@ -713,9 +341,9 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
             int64_t a = spop_tag(&act->stack, &act->stack_tags, &ta);
             act->consecutive_pushes = 0;
-            if (act == &ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
-            if (act == &ctxA && b == 0) troll_die(TR_DIVZERO);
-            if (act == &ctxA && a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
+            if (act == &vm.ctxA && ta != tb) troll_die(TR_TYPE_MISMATCH);
+            if (act == &vm.ctxA && b == 0) troll_die(TR_DIVZERO);
+            if (act == &vm.ctxA && a == INT64_MIN && b == -1) troll_die(TR_OVERFLOW);
             int64_t div_res = (b != 0) ? (a / b) : 0;
             vec_push(&act->stack, div_res);
             vec_push(&act->stack_tags, ta);
@@ -726,14 +354,14 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         }
         case OP_DUP: {
             if (act->stack.n == 0) {
-                if (act == &ctxA) troll_die(TR_STACK);
+                if (act == &vm.ctxA) troll_die(TR_STACK);
                 break;
             }
             int tag = act->stack_tags.n > 0 ? (int)act->stack_tags.d[act->stack_tags.n - 1] : 0;
             vec_push(&act->stack, act->stack.d[act->stack.n - 1]);
             vec_push(&act->stack_tags, tag);
             act->consecutive_pushes++;
-            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &vm.ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         }
         case OP_SWAP: {
@@ -766,15 +394,15 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             break;
         }
         case OP_REGGET: {
-            size_t ridx = (size_t)(((inst.arg % 4) + 4) % 4);
+            size_t ridx = (size_t)(((op_arg % 4) + 4) % 4);
             vec_push(&act->stack, act->regs[ridx]);
             vec_push(&act->stack_tags, act->reg_tags[ridx]);
             act->consecutive_pushes++;
-            if (act == &ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
+            if (act == &vm.ctxA && act->consecutive_pushes > 7) troll_die(TR_AVALANCHE);
             break;
         }
         case OP_REGSET: {
-            size_t ridx = (size_t)(((inst.arg % 4) + 4) % 4);
+            size_t ridx = (size_t)(((op_arg % 4) + 4) % 4);
             int tag_tmp = 0;
             act->regs[ridx] = spop_tag(&act->stack, &act->stack_tags, &tag_tmp);
             act->reg_tags[ridx] = (uint8_t)tag_tmp;
@@ -782,60 +410,66 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             break;
         }
         case OP_FISH: {
-            int add = (inst.arg > 0 && inst.arg <= 10000) ? (int)inst.arg : 50;
-            gas_budget += add;
-            if (gas_budget > 100000) gas_budget = 100000;
+            int add = (op_arg > 0 && op_arg <= 10000) ? (int)op_arg : 50;
+            vm.gas_budget += add;
+            if (vm.gas_budget > 100000) vm.gas_budget = 100000;
             break;
         }
         case OP_CRAZY: {
             int tb = 0, ta = 0;
             int64_t b = spop_tag(&act->stack, &act->stack_tags, &tb);
             int64_t a = spop_tag(&act->stack, &act->stack_tags, &ta);
-            uint64_t crz = tux_crazy64((uint64_t)a, (uint64_t)b);
-            vec_push(&act->stack, (int64_t)crz);
+            int64_t crz = tux_crazy_alu(a, b);
+            vec_push(&act->stack, crz);
             vec_push(&act->stack_tags, ta);
             act->consecutive_pushes = 0;
-            last_exec_result = (int64_t)crz;
+            last_exec_result = crz;
             break;
         }
         case OP_CAST:
             if (act->stack_tags.n > 0) {
-                act->stack_tags.d[act->stack_tags.n - 1] = inst.arg;
+                act->stack_tags.d[act->stack_tags.n - 1] = op_arg;
             }
             break;
         case OP_DIR:
-            act->dir = (uint8_t)(((inst.arg % 4) + 4) % 4);
+            act->dir = (uint8_t)(((op_arg % 4) + 4) % 4);
             break;
         case OP_INPUTNUM: {
-            vec_fit(&vars, (size_t)inst.arg + 1);
+            vec_fit(&vars, (size_t)op_arg + 1);
             long long x;
             if (scanf(" %lld", &x) != 1) troll_die(TR_BADINPUT);
-            vars.d[inst.arg] = (int64_t)x;
+            vars.d[op_arg] = (int64_t)x;
             break;
         }
         case OP_LOADIND: {
             int64_t a = spop(&act->stack);
-            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
-            if (a < 0 || a >= TUX_MEM_SIZE) a = (a % TUX_MEM_SIZE + TUX_MEM_SIZE) % TUX_MEM_SIZE;
-            vec_push(&act->stack, memory[a].val);
-            vec_push(&act->stack_tags, memory[a].type_tag);
-            last_exec_result = memory[a].val;
+            if (act == &vm.ctxA && (a < 0 || a >= UNIFIED_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a < 0 || a >= UNIFIED_MEM_SIZE) a = (a % UNIFIED_MEM_SIZE + UNIFIED_MEM_SIZE) % UNIFIED_MEM_SIZE;
+            uint32_t val32 = vm.unified_mem[a];
+            if (val32 % 17 == 0) {
+                vm_panic(PANIC_AFFINE_USE_AFTER_MOVE, "Affine borrow checker: cell moved (W = 0 mod 17)");
+            }
+            vec_push(&act->stack, (int64_t)val32);
+            vec_push(&act->stack_tags, tux_cell_type(val32));
+            last_exec_result = (int64_t)val32;
+            /* Торсионное спаривание: чтение данных через PCD сдвигает фазу PCC */
+            if ((uint16_t)a == act->pc_data) {
+                act->pc_code = (uint16_t)((act->pc_code + 1) % UNIFIED_MEM_SIZE);
+            }
             break;
         }
         case OP_STOREIND: {
             int64_t v = spop(&act->stack);
             int64_t a = spop(&act->stack);
-            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
-            if (a < 0 || a >= TUX_MEM_SIZE) a = (a % TUX_MEM_SIZE + TUX_MEM_SIZE) % TUX_MEM_SIZE;
+            if (act == &vm.ctxA && (a < 0 || a >= UNIFIED_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a < 0 || a >= UNIFIED_MEM_SIZE) a = (a % UNIFIED_MEM_SIZE + UNIFIED_MEM_SIZE) % UNIFIED_MEM_SIZE;
             h_entry.has_mem_modified = 1;
             h_entry.mem_addr = (uint16_t)a;
-            h_entry.mem_val_before = memory[a].val;
-            h_entry.mem_tag_before = memory[a].type_tag;
+            h_entry.mem_val_before = vm.unified_mem[a];
 
-            memory[a].val = v;
-            memory[a].raw_code = mutation_encode(v, program_key, genome.chromosomes[0]);
-            memory[a].flags |= TUX_FLAG_MUTATED;
-            last_exec_result = v;
+            uint32_t val32 = (uint32_t)((v % TUX_ZM_M + TUX_ZM_M) % TUX_ZM_M);
+            vm.unified_mem[a] = val32;
+            last_exec_result = (int64_t)val32;
             break;
         }
         case OP_CMP: {
@@ -845,13 +479,13 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             break;
         }
         case OP_JMP:
-            pending_pc = (uint16_t)(inst.arg % TUX_MEM_SIZE);
+            pending_pc = (uint16_t)(op_arg % UNIFIED_MEM_SIZE);
             is_branch_taken = 1;
             break;
         case OP_JZ: {
             int64_t v = spop(&act->stack);
             if (v == 0) {
-                pending_pc = (uint16_t)(inst.arg % TUX_MEM_SIZE);
+                pending_pc = (uint16_t)(op_arg % UNIFIED_MEM_SIZE);
                 is_branch_taken = 1;
             }
             break;
@@ -859,33 +493,33 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         case OP_JNZ: {
             int64_t v = spop(&act->stack);
             if (v != 0) {
-                pending_pc = (uint16_t)(inst.arg % TUX_MEM_SIZE);
+                pending_pc = (uint16_t)(op_arg % UNIFIED_MEM_SIZE);
                 is_branch_taken = 1;
             }
             break;
         }
-        case OP_LISTNEW: list_at(&lists, inst.arg)->n = 0; break;
+        case OP_LISTNEW: list_at(&lists, op_arg)->n = 0; break;
         case OP_LISTPUSH: {
             int64_t v = spop(&act->stack);
-            vec_push(list_at(&lists, inst.arg), v);
+            vec_push(list_at(&lists, op_arg), v);
             break;
         }
         case OP_LISTGET: {
-            Vec *L = list_at(&lists, inst.arg);
+            Vec *L = list_at(&lists, op_arg);
             int64_t i = spop(&act->stack);
             if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
             vec_push(&act->stack, L->d[i]);
             break;
         }
         case OP_LISTSET: {
-            Vec *L = list_at(&lists, inst.arg);
+            Vec *L = list_at(&lists, op_arg);
             int64_t v = spop(&act->stack), i = spop(&act->stack);
             if (i < 0 || (size_t)i >= L->n) troll_die(TR_LISTRANGE);
             L->d[i] = v;
             break;
         }
         case OP_LISTLEN:
-            vec_push(&act->stack, (int64_t)list_at(&lists, inst.arg)->n);
+            vec_push(&act->stack, (int64_t)list_at(&lists, op_arg)->n);
             break;
 
         /* TuxPL 2.0.0 расширения */
@@ -895,7 +529,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             break;
         case OP_SET_PC: {
             int64_t a = spop(&act->stack);
-            pending_pc = (uint16_t)(a % TUX_MEM_SIZE);
+            pending_pc = (uint16_t)(a % UNIFIED_MEM_SIZE);
             is_branch_taken = 1;
             break;
         }
@@ -910,57 +544,54 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         case OP_ADD_PC: {
             int64_t off = spop(&act->stack);
             int64_t n_pc = (int64_t)act->pc_code + off;
-            while (n_pc < 0) n_pc += TUX_MEM_SIZE;
-            pending_pc = (uint16_t)(n_pc % TUX_MEM_SIZE);
+            while (n_pc < 0) n_pc += UNIFIED_MEM_SIZE;
+            pending_pc = (uint16_t)(n_pc % UNIFIED_MEM_SIZE);
             is_branch_taken = 1;
             break;
         }
         case OP_XOR_PC: {
             int64_t mask = spop(&act->stack);
-            pending_pc = (uint16_t)((act->pc_code ^ (uint16_t)mask) % TUX_MEM_SIZE);
+            pending_pc = (uint16_t)((act->pc_code ^ (uint16_t)mask) % UNIFIED_MEM_SIZE);
             is_branch_taken = 1;
             break;
         }
         case OP_CLONE: {
             int64_t dst = spop(&act->stack);
             int64_t src = spop(&act->stack);
-            tux_clone_cell(memory, (uint16_t)(src % TUX_MEM_SIZE), (uint16_t)(dst % TUX_MEM_SIZE), &genome, entropy.pool, &active_code_count);
+            tux_clone_cell(vm.unified_mem, (uint16_t)(src % UNIFIED_MEM_SIZE), (uint16_t)(dst % UNIFIED_MEM_SIZE), &vm.genome, vm.entropy.pool, &active_code_count);
             break;
         }
         case OP_DECAY: {
             int64_t a = spop(&act->stack);
-            if (act == &ctxA && (a < 0 || a >= TUX_MEM_SIZE)) troll_die(TR_MEMRANGE);
-            if (a >= 0 && a < TUX_MEM_SIZE) {
-                memory[a].age = TUX_AGE_DEAD;
-                memory[a].flags |= TUX_FLAG_CORRUPTED;
-                memory[a].type_tag = TUX_TYPE_I64;
-                memory[a].raw_code = (uint16_t)(tux_crazy64((uint64_t)memory[a].val, (uint64_t)a) & 0xFFFF);
+            if (act == &vm.ctxA && (a < 0 || a >= UNIFIED_MEM_SIZE)) troll_die(TR_MEMRANGE);
+            if (a >= 0 && a < UNIFIED_MEM_SIZE) {
+                vm.unified_mem[a] = 0; /* age(0) == DEAD */
             }
             break;
         }
         case OP_WAKE: {
             int64_t a = spop(&act->stack);
-            if (a >= 0 && a < TUX_MEM_SIZE) {
-                memory[a].flags &= ~TUX_FLAG_DORMANT;
+            if (a >= 0 && a < UNIFIED_MEM_SIZE) {
+                if (vm.unified_mem[a] == 0) vm.unified_mem[a] = 1;
             }
             break;
         }
         case OP_REINTERPRET:
             if (act->stack_tags.n > 0) {
-                act->stack_tags.d[act->stack_tags.n - 1] = inst.arg;
+                act->stack_tags.d[act->stack_tags.n - 1] = op_arg;
             }
             break;
         case OP_UNDO:
-            if (!tux_history_undo(&hist, act, memory)) {
-                if (act == &ctxA) troll_die(TR_NO_HISTORY);
+            if (!tux_history_undo(&vm.hist, act, vm.unified_mem)) {
+                if (act == &vm.ctxA) troll_die(TR_NO_HISTORY);
             }
             break;
         case OP_PAY_TIME: {
-            uint64_t pay = time_debt.accumulated_debt > 50 ? 50 : time_debt.accumulated_debt;
-            time_debt.accumulated_debt -= pay;
-            time_debt.paid_total += pay;
-            gas_budget -= 10;
-            if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Metabolic gas budget exhausted during temporal debt payment");
+            uint64_t pay = vm.time_debt.accumulated_debt > 50 ? 50 : vm.time_debt.accumulated_debt;
+            vm.time_debt.accumulated_debt -= pay;
+            vm.time_debt.paid_total += pay;
+            vm.gas_budget -= 10;
+            if (vm.gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Metabolic gas budget exhausted during temporal debt payment");
             break;
         }
         case OP_NOP:
@@ -970,66 +601,64 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
 
         /* Сохранение в историю при необходимости */
         if (config->is_reversible) {
-            tux_history_push(&hist, &h_entry);
+            tux_history_push(&vm.hist, &h_entry);
         }
 
-        /* ФАЗА 4: MUTATE */
-        tux_mutate_cell(&memory[pc], last_exec_result, program_key, genome.chromosomes[0], entropy.pool, pc);
+        /* ФАЗА 4: MUTATE — SP-Round необратимое шифрование */
+        uint32_t prev_w = vm.unified_mem[pc];
+        vm.unified_mem[pc] = tux_sp_round(prev_w, pc);
 
-        /* ФАЗА 5: REGISTER COUPLING (внутри active_ctx) */
-        tux_register_coupling(act->regs);
+        /* ФАЗА 5: REGISTER COUPLING (внутри active_ctx в режиме состязательности) */
+        if (vm.ctxB.active) {
+            tux_register_coupling(act->regs);
+        }
 
-        /* ФАЗА 6: GENOME UPDATE (производит G_{t+1}) */
-        tux_genome_evolve(&genome, last_exec_result, entropy.pool, act->regs, pc);
-        tux_entropy_step(&entropy, pc, (uint64_t)act->regs[0], genome.chromosomes[0]);
+        /* ФАЗА 6: GENOME UPDATE */
+        tux_genome_evolve(&vm.genome, last_exec_result, vm.entropy.pool, act->regs, pc);
+        tux_entropy_step(&vm.entropy, pc, (uint64_t)act->regs[0], vm.genome.chromosomes[0]);
 
-        /* ФАЗА 6.1: DORMANT RESONANCE (использует G_{t+1}) */
-        tux_check_dormant_resonance(memory, &genome);
-
-        /* ФАЗА 7: PC UPDATE (ТОЛЬКО для active_ctx, использует G_{t+1}) */
+        /* ФАЗА 7: PC UPDATE и торсионное возмущение PCD */
         if (is_branch_taken) {
-            act->pc_code = pending_pc % TUX_MEM_SIZE;
+            act->pc_code = pending_pc % UNIFIED_MEM_SIZE;
         } else {
             int dir_offset = (act->dir == 1 ? 5 : (act->dir == 2 ? -1 : (act->dir == 3 ? -5 : 1)));
             int64_t next_pc = (int64_t)act->pc_code + dir_offset;
-            while (next_pc < 0) next_pc += TUX_MEM_SIZE;
-            act->pc_code = (uint16_t)(next_pc % TUX_MEM_SIZE);
-        }
-        if (act == &ctxB && act->pc_code < prog->len && prog->len < TUX_MEM_SIZE) {
-            act->pc_code = (uint16_t)(prog->len + (act->pc_code % (TUX_MEM_SIZE - prog->len)));
+            while (next_pc < 0) next_pc += UNIFIED_MEM_SIZE;
+            act->pc_code = (uint16_t)(next_pc % UNIFIED_MEM_SIZE);
         }
 
-        /* ФАЗА 8: SCHEDULE (использует G_{t+1} и актуальное состояние памяти) */
-        if (config->mode == TUX_MODE_APOCALYPSE) {
-            tux_scheduler_step(&sched, act, memory, &genome, entropy.pool, step_counter);
+        /* Торсионное спаривание счетчиков Dual-PC при инкременте PCC */
+        act->pc_data = (uint16_t)((act->pc_data + (uint16_t)__builtin_popcount(prev_w) + 1) % UNIFIED_MEM_SIZE);
+
+        if (act == &vm.ctxB && act->pc_code < prog->len && prog->len < UNIFIED_MEM_SIZE) {
+            act->pc_code = (uint16_t)(prog->len + (act->pc_code % (UNIFIED_MEM_SIZE - prog->len)));
         }
 
-        /* Завершение программы: если в Purgatory или Apocalypse основной контекст дошел до конца исходного кода и нет прыжка */
-        if ((config->mode == TUX_MODE_PURGATORY || config->mode == TUX_MODE_APOCALYPSE) && act == &ctxA && act->pc_code >= prog->len) {
+        /* ФАЗА 8: SCHEDULE */
+        if (vm.ctxB.active) {
+            tux_scheduler_step(&vm.sched, act, vm.unified_mem, &vm.genome, vm.entropy.pool, vm.step_counter);
+        }
+
+        /* Завершение программы: Context A выполнил всю программу */
+        if (act == &vm.ctxA && act->pc_code >= prog->len) {
             break;
         }
 
         /* ФАЗА 9: step_counter++ */
-        step_counter++;
+        vm.step_counter++;
     }
 
-    free(ctxA.stack.d);
-    free(ctxA.stack_tags.d);
-    free(ctxB.stack.d);
-    free(ctxB.stack_tags.d);
+    free(vm.ctxA.stack.d);
+    free(vm.ctxA.stack_tags.d);
+    free(vm.ctxB.stack.d);
+    free(vm.ctxB.stack_tags.d);
     free(vars.d);
     free(vars_tags.d);
-    free(memory);
+    free(vm.unified_mem);
     for (size_t i = 0; i < lists.n; i++) free(lists.d[i].d);
     free(lists.d);
 }
 
 void vm_run(const Program *prog, const TuxVMConfig *config) {
-    if (config->mode == TUX_MODE_CLASSIC) {
-        run_classic(prog);
-    } else if (config->mode == TUX_MODE_CURSED) {
-        run_cursed(prog);
-    } else {
-        run_unified_vm(prog, config);
-    }
+    run_unified_vm(prog, config);
 }

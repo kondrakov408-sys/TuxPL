@@ -70,41 +70,28 @@ int main(void) {
         int64_t regs[4] = {10, 20, 30, 40};
 
         /* Case 4.1: DEAD cell -> OP_NOP */
-        TuxCell dead_cell;
-        memset(&dead_cell, 0, sizeof(dead_cell));
-        dead_cell.age = TUX_AGE_DEAD;
-        dead_cell.raw_code = OP_ADD;
-        dead_cell.val = 42;
-        DecodedInstruction inst_dead = decode_instruction(&dead_cell, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
+        uint32_t dead_val = 0; /* age(0) == DEAD */
+        DecodedInstruction inst_dead = decode_instruction(dead_val, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
         CHECK(inst_dead.op == OP_NOP, "DEAD cell decodes strictly to OP_NOP");
         CHECK(inst_dead.width == 1, "DEAD cell width is 1");
 
-        /* Case 4.2: DORMANT cell -> OP_NOP */
-        TuxCell dormant_cell;
-        memset(&dormant_cell, 0, sizeof(dormant_cell));
-        dormant_cell.flags = TUX_FLAG_DORMANT;
-        dormant_cell.raw_code = OP_MUL;
-        dormant_cell.val = 99;
-        DecodedInstruction inst_dormant = decode_instruction(&dormant_cell, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
+        /* Case 4.2: DEAD cell (nu3=3) -> OP_NOP */
+        uint32_t dead_val2 = 27; /* age(27) == DEAD */
+        DecodedInstruction inst_dormant = decode_instruction(dead_val2, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
         CHECK(inst_dormant.op == OP_NOP, "DORMANT cell decodes strictly to OP_NOP");
 
         /* Case 4.3: YOUNG OPCODE cell in non-apocalypse -> raw_code */
-        TuxCell young_cell;
-        memset(&young_cell, 0, sizeof(young_cell));
-        young_cell.age = TUX_AGE_YOUNG;
-        young_cell.type_tag = TUX_TYPE_OPCODE;
-        young_cell.raw_code = OP_PUSH;
-        young_cell.val = 12345;
-        DecodedInstruction inst_young = decode_instruction(&young_cell, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 4, 0);
+        uint32_t young_val = 8;
+        DecodedInstruction inst_young = decode_instruction(young_val, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 4, 0);
         CHECK(inst_young.op == OP_PUSH, "YOUNG cell in Purgatory decodes strictly to raw_code");
         CHECK(inst_young.width >= 1 && inst_young.width <= 4, "Width is clamped to [1, 4]");
 
         /* Case 4.4: Dynamic operand width masking */
-        young_cell.val = 0x12345678;
-        DecodedInstruction inst_w1 = decode_instruction(&young_cell, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
+        young_val = 0x12345678;
+        DecodedInstruction inst_w1 = decode_instruction(young_val, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 1, 0);
         CHECK(inst_w1.arg == (int64_t)(int8_t)(0x78), "Width 1 sign-extends 8-bit operand");
 
-        DecodedInstruction inst_w2 = decode_instruction(&young_cell, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 2, 0);
+        DecodedInstruction inst_w2 = decode_instruction(young_val, 0, 0x12345678ULL, regs, &genome, 0xABCDEF, 2, 0);
         CHECK(inst_w2.arg == (int64_t)(int16_t)(0x5678), "Width 2 sign-extends 16-bit operand");
     }
 
@@ -136,13 +123,13 @@ int main(void) {
 
         TuxGenome genome;
         tux_genome_init(&genome, 0x42ULL, NULL);
-        TuxCell *mem = calloc(TUX_MEM_SIZE, sizeof(TuxCell));
+        uint32_t *mem = calloc(TUX_MEM_SIZE, sizeof(uint32_t));
         TuxContext ctx;
         memset(&ctx, 0, sizeof(ctx));
         ctx.pc_code = 10;
         ctx.pc_data = 20;
         ctx.regs[0] = 100;
-        mem[20].val = 999;
+        mem[20] = 999;
 
         /* Step sched1 and sched2 identically */
         uint8_t id1 = tux_scheduler_step(&sched1, &ctx, mem, &genome, 0x100ULL, 1);

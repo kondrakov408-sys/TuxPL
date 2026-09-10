@@ -8,14 +8,14 @@ void tux_scheduler_init(TuxScheduler *sched, uint64_t program_key) {
 uint8_t tux_scheduler_step(
     TuxScheduler *sched,
     const TuxContext *active_ctx,
-    const TuxCell *mem,
+    const uint32_t *mem,
     const TuxGenome *genome,
     uint64_t entropy_pool,
     uint64_t step_counter
 ) {
     uint64_t v_pc = (uint64_t)active_ctx->pc_code;
     uint64_t v_reg = (uint64_t)active_ctx->regs[0];
-    uint64_t v_mem = (uint64_t)mem[active_ctx->pc_data].val;
+    uint64_t v_mem = (uint64_t)mem[active_ctx->pc_data];
 
     uint64_t metric = tux_crazy64((v_pc + v_reg + v_mem), sched->sched_state);
     uint8_t next_id = (uint8_t)(metric % 2);

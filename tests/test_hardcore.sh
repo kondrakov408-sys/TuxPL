@@ -114,11 +114,11 @@ with open(os.path.join(tmp, 'manifest.sh'), 'w') as mf:
 . "$TMP_DIR/manifest.sh"
 
 # Тест 1: Базовый запуск программы в режиме Unified VM
-check purgatory_hi "Hi" ./tuxpl "$TMP_DIR/$F_HI"
+check purgatory_hi "Hi" ./tuxpl --no-shadow "$TMP_DIR/$F_HI"
 
 # Тест 2: Гарантированное падение по PANIC_BUDGET_EXHAUSTION при нулевом газе
 set +e
-env TUX_GAS_BUDGET=0 ./tuxpl "$TMP_DIR/$F_HI" >/dev/null 2>&1
+env TUX_GAS_BUDGET=0 ./tuxpl --no-shadow "$TMP_DIR/$F_HI" >/dev/null 2>&1
 rc=$?
 set -e
 if [ "$rc" -eq 3 ]; then
@@ -129,35 +129,35 @@ else
     echo "  [FAIL] zero_gas_budget_exhaustion: ожидали код 3, получили $rc"
 fi
 
-# Тест 3: Запуск через академический первичный флаг --UNIFIED-VM
-check unified_vm_mode "Hi" ./tuxpl --UNIFIED-VM "$TMP_DIR/$F_HI"
+# Тест 3: Запуск через ортогональный флаг --no-shadow
+check unified_vm_mode "Hi" ./tuxpl --no-shadow "$TMP_DIR/$F_HI"
 
 # Тест 4: Обрушение стека от гравитации (>7 pushes)
-expect_troll stack_avalanche ./tuxpl "$TMP_DIR/$F_AVA"
+expect_troll stack_avalanche ./tuxpl --no-shadow "$TMP_DIR/$F_AVA"
 
 # Тест 5: Borrow Checker (Use-after-move)
-expect_troll use_after_move ./tuxpl "$TMP_DIR/$F_BOR"
+expect_troll use_after_move ./tuxpl --no-shadow "$TMP_DIR/$F_BOR"
 
 # Тест 6: Аппаратные регистры (Tu = RAX аккумулятор)
-check hw_registers "42" ./tuxpl "$TMP_DIR/$F_REG"
+check hw_registers "42" ./tuxpl --no-shadow "$TMP_DIR/$F_REG"
 
 # Тест 7: Троичная CRAZY операция (Malbolge)
-check crazy_op "29523" ./tuxpl "$TMP_DIR/$F_CRZ"
+check crazy_op "29523" ./tuxpl --no-shadow "$TMP_DIR/$F_CRZ"
 
 # Тест 8: Несовпадение строгих типов
-expect_troll type_mismatch ./tuxpl "$TMP_DIR/$F_TBAD"
+expect_troll type_mismatch ./tuxpl --no-shadow "$TMP_DIR/$F_TBAD"
 
 # Тест 9: Явный кастинг типа (CAST)
-check type_cast "1010" ./tuxpl "$TMP_DIR/$F_TGOOD"
+check type_cast "1010" ./tuxpl --no-shadow "$TMP_DIR/$F_TGOOD"
 
 # Тест 10: Исчерпание метаболического бюджета газа
-expect_troll gas_starvation ./tuxpl "$TMP_DIR/$F_STARVE"
+expect_troll gas_starvation ./tuxpl --no-shadow "$TMP_DIR/$F_STARVE"
 
 # Тест 11: Восполнение метаболического газа (OP_FISH / OP_REPLENISH_GAS)
-check gas_replenished "" ./tuxpl "$TMP_DIR/$F_REPL"
+check gas_replenished "" ./tuxpl --no-shadow "$TMP_DIR/$F_REPL"
 
 # Тест 12: Нарушение невидимой Whitespace-четности
-expect_troll whitespace_tampered ./tuxpl "$TMP_DIR/$F_TAMP"
+expect_troll whitespace_tampered ./tuxpl --no-shadow "$TMP_DIR/$F_TAMP"
 
 echo "======================================================="
 echo "Хардкорные тесты: OK: $pass, FAIL: $fail"

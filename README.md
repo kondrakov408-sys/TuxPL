@@ -14,8 +14,9 @@
   <img src="https://img.shields.io/badge/CFI-Galois%20Field%20%E2%84%A4%2F2%E2%81%B8%20(GBSV)-red.svg?style=flat-square" alt="CFI GBSV">
   <img src="https://img.shields.io/badge/Operand%20Engine-RNS--CRT%20M%3D7436429-purple.svg?style=flat-square" alt="RNS-CRT">
   <img src="https://img.shields.io/badge/Opcode%20Synthesis-De%20Bruijn%20Mealy%20Machine-darkgreen.svg?style=flat-square" alt="De Bruijn">
-  <img src="https://img.shields.io/badge/Memory%20Model-Unified%2064K%20Cells-black.svg?style=flat-square" alt="Unified Memory">
-  <img src="https://img.shields.io/badge/Verification-90%2F90%20Suites%20%7C%2074k%20Assertions%20(100%25)-brightgreen.svg?style=flat-square" alt="Tests Passing">
+  <img src="https://img.shields.io/badge/Memory%20Model-Flat%20Torus%20%E2%84%A4_M%20(64K)-black.svg?style=flat-square" alt="Flat Torus ZM">
+  <img src="https://img.shields.io/badge/Verification-8%2F8%20Suites%20%7C%2074k%20Assertions%20(100%25)-brightgreen.svg?style=flat-square" alt="Tests Passing">
+  <img src="https://img.shields.io/badge/Sanitizers-ASan%20%2B%20UBSan%20(0%20Warnings)-blueviolet.svg?style=flat-square" alt="Sanitizers">
 </p>
 
 <p align="center">
@@ -26,9 +27,9 @@
 
 ## Abstract
 
-This specification defines **TuxPL 2.0.0**, a deterministic, adversarial, polymorphic programming language and execution environment engineered as a high-order Constraint Satisfaction Problem (CSP). Departing fundamentally from trivial substitution-based esoteric architectures (such as Malbolge or INTERCAL), TuxPL integrates cryptographic control-flow integrity, modular arithmetic representations, biological cellular memory degradation, and two-agent adversarial concurrency into a formally verified C99 runtime.
+This specification defines **TuxPL 2.0.0**, a deterministic, adversarial, polymorphic programming language and execution environment engineered as a high-order Constraint Satisfaction Problem (CSP). Departing fundamentally from trivial substitution-based esoteric architectures (such as Malbolge or INTERCAL), TuxPL integrates cryptographic control-flow integrity (CFI), modular arithmetic representations, latent $p$-adic cellular degradation, and two-agent adversarial concurrency into an uncompromising monolithic C99 runtime.
 
-Programs in TuxPL are not sequences of unconstrained mnemonics; they constitute bounded trajectories across a $k=2$ De Bruijn directed graph over the six-letter alphabet $\Sigma = \{T, t, U, u, X, x\}$, with operands embedded in a six-moduli Residue Number System (RNS) isomorphic to $\mathbb{Z} / 7{,}436{,}429\mathbb{Z}$ via the Chinese Remainder Theorem. Control-flow integrity is enforced at every line boundary by an 11-byte Galois-Base64 Syndrome Verification (GBSV) barrier evaluated over the finite field $\mathbb{F}_{2^8}$ with the Rijndael generator polynomial. Execution is hosted within a Von Neumann unified memory of 65,536 self-mutating cellular units governed by affine move-semantics, gravitational stack dynamics, and an adversarial quantum scheduler arbitrating between user execution and a concurrent shadow agent.
+In the TuxPL 2.0.0 kernel, discrete memory modes, classic stack interpreters, and behavioral mode switches have been permanently eliminated: the runtime operates exclusively on a **flat cryptographic torus $\mathbb{Z}_M$** ($M = 7{,}436{,}429$, fixed size of 65,536 `uint32_t` words), completely blurring the boundary between executable machine code and cryptographic entropy. Programs constitute bounded trajectories across a $k=2$ De Bruijn directed graph over the six-letter alphabet $\Sigma = \{T, t, U, u, X, x\}$, with operands embedded in a six-moduli Residue Number System (RNS) isomorphic to $\mathbb{Z} / 7{,}436{,}429\mathbb{Z}$ via the Chinese Remainder Theorem (CRT). Control-flow integrity is enforced at every line boundary by an 11-byte Galois-Base64 Syndrome Verification (GBSV) barrier over the finite field $\mathbb{F}_{2^8}$ with the Rijndael generator polynomial. Execution proceeds under the supervision of an Affine Borrow Checker ($W \equiv 0 \pmod{17}$), gravitational stack dynamics, metabolic gas consumption, and a deterministic quantum scheduler. Default execution is strictly safeguarded against unauthorized execution by **The Orphan Paradox** (mandatory presence of an 88-byte binary companion file `.tu`), with local development supported via the orthogonal `--no-shadow` flag.
 
 ---
 
@@ -36,7 +37,7 @@ Programs in TuxPL are not sequences of unconstrained mnemonics; they constitute 
 
 Traditional esoteric languages achieve obfuscation through ad-hoc randomness or lookup tables (e.g., Malbolge’s ternary crazy function applied to a static 59,049-cell ring). Such designs suffer from deterministic pre-image vulnerabilities and rapid entropy collapse.
 
-TuxPL 2.0.0 formalizes execution as a system of **simultaneous non-linear invariants across five orthogonal execution strata**:
+TuxPL 2.0.0 formalizes execution as a monolithic system of **simultaneous non-linear invariants across five orthogonal execution strata**:
 
 ```text
                                  [ SOURCE CODE ]
@@ -45,37 +46,41 @@ TuxPL 2.0.0 formalizes execution as a system of **simultaneous non-linear invari
            ▼                                                         ▼
    [ LEXICAL STRATUM ]                                       [ STRUCTURAL STRATUM ]
    • Alphabet: Σ = {T,t,U,u,X,x}                             • File size in bits: |F| = bits(F)
-   • Opcode: De Bruijn Mealy Machine (252 states)             • Micro-library declarations
+   • Opcode: De Bruijn Mealy Machine (252 states)             • Mandatory micro-libraries Tux/
    • Operand: RNS-CRT 12-char suffix (M = 7,436,429)         • Harmonic cycle: 1-2-3-4-5 tokens
                                         │
            ┌────────────────────────────┴────────────────────────────┐
            ▼                                                         ▼
-   [ CRYPTOGRAPHIC CFI ]                                     [ METABOLIC / MEMORY ]
-   • GBSV 11-byte barrier: :[Σ|Χ;Ζ]                          • Unified 64K cellular memory
-   • Base64 cyclic spectral shift                            • Dual PC: PC_CODE ↔ PC_DATA
-   • Galois Field F_{2^8} syndrome analysis                  • Affine borrow-checker (Move semantics)
-   • Hamming collapse with ~"TUX" seed                       • Cellular degradation: YOUNG→DEAD
+   [ CRYPTOGRAPHIC CFI ]                                     [ FLAT TORUS Z_M & METABOLISM ]
+   • 11-byte GBSV terminator: :[Σ|Χ|Τ];Ζ}                    • Flat torus Z_M (64K uint32_t, M=7436429)
+   • Base64 cyclic spectral shift                            • 3-adic age: nu_3(W) mod 4
+   • Galois Field F_{2^8} syndrome (Rijndael 0x11B)          • Affine Borrow Checker: W != 0 mod 17
+   • p-adic wavelet analysis: nu_2(W) vs nu_3(W)             • Torsion shift: PCD += popcount(W) + 1
+   • Hamming collapse Z relative to P_{prev}                 • SP-Round: Irreversible AES S-Box round
                                         │
                                         ▼
-                         [ ADVERSARIAL RUNTIME ENGINE ]
-                         • Context A (User, PC=0)
+                         [ MONOLITHIC ADVERSARIAL RUNTIME ]
+                         • Context A (Main User Thread, PC=0)
                          • Context B (Shadow Adversary)
-                         • Deterministic Quantum Scheduler
-                         • Differential Register Coupling
+                         • The Orphan Paradox: Mandatory companion (.tu)
+                         • Flag --no-shadow for local development
+                         • Deterministic quantum scheduler
+                         • Metabolic gas budget (100) & time debt
 ```
 
 ### Invariant Equations
 
-For an execution trace $\mathcal{T} = (\sigma_0, \sigma_1, \dots, \sigma_n)$ to remain valid, every transition $\sigma_t \to \sigma_{t+1}$ must satisfy:
+To ensure execution trace validity $\mathcal{T} = (\sigma_0, \sigma_1, \dots, \sigma_n)$, every state transition must strictly satisfy the set of formal invariants:
 
-1. **Orthographic Invariant:** Every instruction token $w \in \Sigma^*$ is a valid walk on the De Bruijn automaton producing opcode $\lambda(q, w) \in [0, 41]$.
-2. **Modular Operand Invariant:** Every integer argument $N \in [0, M-1]$ is mapped to residues $\vec{r} = (N \bmod m_i)_{i=0}^5$ and encoded into 12 characters via Radix-6 projection.
-3. **Harmonic Length Invariant:** Line $L_k$ contains exactly $k \pmod 5 + 1$ tokens ($1 \le |L_k| \le 5$).
-4. **Whitespace Steganography:** The delimiter following token $w$ contains $\delta(w)$ space characters, where $\delta(w) = \sum_{c \in w} [c \in \{U, u\}]$.
-5. **Galois CFI Invariant:** Every line terminates with a valid GBSV signature $\mathcal{S}_k = (\Sigma_k, \mathrm{X}_k, Z_k)$ binding the line prefix to the algebraic state of line $k-1$ in $\mathbb{F}_{2^8}$.
-6. **Thermodynamic Gas Invariant:** $B_{t+1} = B_t - \text{cost}(\text{op}_t) \ge 0$. If $B_t = 0$, execution halts with panic code 3 (`PANIC_BUDGET_EXHAUSTION`).
+1. **Orthographic Invariant:** Every instruction token $w \in \Sigma^*$ is a valid path on the De Bruijn directed graph generating an opcode $\lambda(q, w) \in [0, 41]$.
+2. **Modular Operand Invariant:** Every integer argument $N \in [0, M-1]$ is mapped to residue vector $ec{r} = (N mod m_i)_{i=0}^5$ and encoded into exactly 12 characters via Radix-6 projection.
+3. **Harmonic Line-Length Invariant:** Line $L_k$ contains exactly $k \pmod 5 + 1$ tokens ($1 \le |L_k| \le 5$).
+4. **Delimiter Steganography:** The trailing space interval after token $w$ contains strictly $\delta(w)$ spaces, where $\delta(w) = \sum_{c \in w} [c \in \{U, u\}]$.
+5. **Galois Integrity Invariant:** Every line of source code terminates with a valid 11-byte GBSV signature $\mathcal{S}_k = (\sigma_{	ext{b64}}, \chi_{	ext{gf}}, 	au_{	ext{tux}}, \zeta)$, chaining the line's prefix with the algebraic state of line $k-1$ in $\mathbb{F}_{2^8}$ and Hamming metric.
+6. **Affine Ownership Invariant:** Any attempt to fetch an instruction from $\mathrm{PC}_{\mathrm{code}}$ or read memory where $W \equiv 0 \pmod{17}$ triggers an immediate Move-semantics panic (`PANIC_AFFINE_USE_AFTER_MOVE`).
+7. **Thermodynamic Energy Invariant:** Gas balance $B_{t+1} = B_t - 1 \ge 0$. Upon exhaustion ($B_t = 0$), execution terminates with code 3 (`PANIC_BUDGET_EXHAUSTION`) unless replenished via `OP_FISH`.
 
-Violation of any invariant terminates the virtual machine with an unrecoverable `[VM_PANIC]` diagnostics vector and an academic POSIX exit code (`1`, `2`, or `3`).
+Any invariant breach immediately halts execution with a deterministic `[VM_PANIC]` diagnostic vector and strict POSIX exit code (`1`, `2`, or `3`).
 
 ---
 
@@ -83,61 +88,67 @@ Violation of any invariant terminates the virtual machine with an unrecoverable 
 
 ### 2.1. De Bruijn Mealy Machine for Opcode Synthesis
 
-Opcodes in TuxPL 2.0.0 are not static byte constants. They represent state-transition outputs emitted by a deterministic Mealy automaton $\mathcal{M}_{DB} = (Q, \Sigma, \Delta, \delta, \lambda, q_0)$ operating over the alphabet $\Sigma = \{T:0, t:1, U:2, u:3, X:4, x:5\}$.
+Opcodes in TuxPL 2.0.0 are not static constants. They are synthesized dynamically as output signals of a deterministic Mealy machine $\mathcal{M}_{DB} = (Q, \Sigma, \Delta, \delta, \lambda, q_0)$ over alphabet $\Sigma = \{T:0, t:1, U:2, u:3, X:4, x:5\}$.
 
 ```text
-Automaton Characteristics:
-  States:           |Q| = 252 (divisible by 42, 6 * 42)
-  Alphabet:         |Σ| = 6
-  Output Alphabet:  |Δ| = 42 (TuxPL Opcodes 0..41)
-  Initial Seed:     q_0 = 0x5A (90)
+Automaton Parameters:
+  State Space:             |Q| = 252 (multiple of 42, 6 * 42)
+  Input Alphabet:          |Σ| = 6
+  Output Alphabet:         |Δ| = 42 (Opcodes 0..41)
+  Initial State:           q_0 = 0x5A (90)
 ```
 
 - **State Transition Function:**
-  $$\delta(q, c) = (6q + \text{idx}(c)) \pmod{252}$$
+  $$\delta(q, c) = (6q + 	ext{idx}(c)) \pmod{252}$$
 - **Mealy Output Function:**
-  $$\lambda(q, c) = (q \oplus (7 \cdot \text{idx}(c))) \pmod{42}$$
+  $$\lambda(q, c) = (q \oplus (7 \cdot 	ext{idx}(c))) \pmod{42}$$
 
 #### Theorem 1 (Complete Reachability of Opcodes)
-$$\forall q \in [0, 251], \quad \forall \text{op} \in [0, 41], \quad \exists w \in \Sigma^3 \quad \text{such that} \quad \lambda^*(\delta^*(q, w_{0..1}), w_2) = \text{op}$$
+$$orall q \in [0, 251], \quad orall 	ext{op} \in [0, 41], \quad \exists w \in \Sigma^3 \quad 	ext{such that} \quad \lambda^*(\delta^*(q, w_{0..1}), w_2) = 	ext{op}$$
 
-*Empirical Proof:* The test suite `tests/test_rns_debruijn.c` evaluates all $252 \times 42 = 10{,}584$ state-opcode pairs via breadth-first search (BFS). In 100% of cases, an exact path of length $\le 3$ exists. The runtime exposes `debruijn_encode_fixed3` (constant 3-character path) and `debruijn_encode_opcode` (minimal 1..3 character path).
+*Empirical Proof:* The verification suite `tests/test_rns_debruijn.c` explores all $252 	imes 42 = 10{,}584$ (state, target opcode) pairs via breadth-first search (BFS). In 100% of cases, a trajectory of length $\le 3$ exists. The runtime exposes `debruijn_encode_fixed3` (fixed length 3) and `debruijn_encode_opcode` (shortest path 1 to 3 characters).
 
 ### 2.2. Residue Number System (RNS-CRT Engine)
 
-To eliminate integer-overflow vulnerabilities and enforce high-entropy operand dispersion, immediate integer operands are processed in a non-positional Residue Number System based on the Chinese Remainder Theorem (CRT).
+To eliminate integer overflow vulnerabilities and maximize operand entropy diffusion, integer constants are represented using a Residue Number System based on the Chinese Remainder Theorem (CRT).
 
 #### Moduli Vector & Dynamic Range
-The system uses six pairwise coprime moduli:
-$$\vec{m} = (m_0, m_1, m_2, m_3, m_4, m_5) = (7, 11, 13, 17, 19, 23)$$
-$$M = \prod_{i=0}^5 m_i = 7 \times 11 \times 13 \times 17 \times 19 \times 23 = \mathbf{7{,}436{,}429}$$
+A tuple of six pairwise coprime moduli is employed:
+$$ec{m} = (m_0, m_1, m_2, m_3, m_4, m_5) = (7, 11, 13, 17, 19, 23)$$
+$$M = \prod_{i=0}^5 m_i = 7 	imes 11 	imes 13 	imes 17 	imes 19 	imes 23 = \mathbf{7{,}436{,}429}$$
 
 Any integer $N \in [0, M-1]$ is uniquely represented by its residue tuple:
-$$\vec{r} = (r_0, r_1, r_2, r_3, r_4, r_5), \quad r_i = N \pmod{m_i}$$
+$$ec{r} = (r_0, r_1, r_2, r_3, r_4, r_5), \quad r_i = N \pmod{m_i}$$
 
 #### Exact Bézout Modular Inverses
-The reconstruction isomorphism $N = \left(\sum_{i=0}^5 r_i C_i\right) \pmod M$ utilizes precomputed Bézout constants $C_i = M_i \cdot (M_i^{-1} \bmod m_i)$, where $M_i = M / m_i$:
+The reconstruction isomorphism $N = \left(\sum_{i=0}^5 r_i C_iight) \pmod M$ is computed using precomputed orthogonal Bézout constants $C_i = M_i \cdot (M_i^{-1} mod m_i)$, where $M_i = M / m_i$:
 
-$$C_0 = 6374082 \quad (C_0 \equiv 1 \bmod 7, \quad C_0 \equiv 0 \bmod m_{j \ne 0})$$
-$$C_1 = 676039 \quad (C_1 \equiv 1 \bmod 11, \quad C_1 \equiv 0 \bmod m_{j \ne 1})$$
-$$C_2 = 1144066 \quad (C_2 \equiv 1 \bmod 13, \quad C_2 \equiv 0 \bmod m_{j \ne 2})$$
-$$C_3 = 5249244 \quad (C_3 \equiv 1 \bmod 17, \quad C_3 \equiv 0 \bmod m_{j \ne 3})$$
-$$C_4 = 782782 \quad (C_4 \equiv 1 \bmod 19, \quad C_4 \equiv 0 \bmod m_{j \ne 4})$$
-$$C_5 = 646646 \quad (C_5 \equiv 1 \bmod 23, \quad C_5 \equiv 0 \bmod m_{j \ne 5})$$
+$$C_0 = 6374082 \quad (C_0 \equiv 1 mod 7, \quad C_0 \equiv 0 mod m_{j 
+e 0})$$
+$$C_1 = 676039 \quad (C_1 \equiv 1 mod 11, \quad C_1 \equiv 0 mod m_{j 
+e 1})$$
+$$C_2 = 1144066 \quad (C_2 \equiv 1 mod 13, \quad C_2 \equiv 0 mod m_{j 
+e 2})$$
+$$C_3 = 5249244 \quad (C_3 \equiv 1 mod 17, \quad C_3 \equiv 0 mod m_{j 
+e 3})$$
+$$C_4 = 782782 \quad (C_4 \equiv 1 mod 19, \quad C_4 \equiv 0 mod m_{j 
+e 4})$$
+$$C_5 = 646646 \quad (C_5 \equiv 1 mod 23, \quad C_5 \equiv 0 mod m_{j 
+e 5})$$
 
 #### Resolution of the Dirichlet Pigeonhole Constraint
-Because $m_5 = 23 > |\Sigma| = 6$, a single 6-ary character cannot represent residues up to 22. TuxPL resolves this by allocating **exactly 2 characters per modulus** ($6 \times 2 = 12$ characters total):
+Because $m_5 = 23 > |\Sigma| = 6$, a single character from $\Sigma$ cannot encode 23 distinct residues. TuxPL allocates **exactly two characters per modulus** ($6 	imes 2 = 12$ suffix characters total):
 
-Each character pair $(c_{2i}, c_{2i+1})$ represents a Radix-6 integer:
-$$v_i = 6 \cdot \text{idx}(c_{2i}) + \text{idx}(c_{2i+1}) \in [0, 35]$$
+Each character pair $(c_{2i}, c_{2i+1})$ represents a base-6 integer in Radix-6:
+$$v_i = 6 \cdot 	ext{idx}(c_{2i}) + 	ext{idx}(c_{2i+1}) \in [0, 35]$$
 $$r_i = v_i \pmod{m_i}$$
 
-Canonical encoding maps $r_i$ deterministically in $O(1)$:
-$$c_{2i} = \Sigma[r_i / 6], \quad c_{2i+1} = \Sigma[r_i \bmod 6]$$
+Direct canonical encoding in $O(1)$:
+$$c_{2i} = \Sigma[r_i / 6], \quad c_{2i+1} = \Sigma[r_i mod 6]$$
 
 ```text
-Example: Encoding Operand N = 42
-  m = (7, 11, 13, 17, 19, 23)
+Example: Encoding operand N = 42
+  Moduli: m = (7, 11, 13, 17, 19, 23)
   Residues:
     42 mod  7 = 0  --> (0, 0) --> "TT"
     42 mod 11 = 9  --> (1, 3) --> "tu"
@@ -146,325 +157,376 @@ Example: Encoding Operand N = 42
     42 mod 19 = 4  --> (0, 4) --> "TX"
     42 mod 23 = 19 --> (3, 1) --> "ut"
   12-Character Suffix: "TTtuTutUTXut"
-  Verification: Sum(r_i * C_i) mod 7436429 = 42. Exactly reversible.
+  Verification: Sum(r_i * C_i) mod 7436429 = 42. Bijection confirmed.
 ```
 
-The decoder `rns_decode_operand(const char *buf, size_t len, uint32_t *out)` accepts explicit length parameters, permitting streaming execution without embedded null terminators.
+The decoding API `rns_decode_operand(const char *buf, size_t len, uint32_t *out)` accepts explicit buffer lengths, enabling safe parsing within dense instruction streams without requiring null terminators `\0`.
 
 ---
 
 ## 3. Control-Flow Integrity: Galois-Base64 Syndrome Verification (GBSV)
 
-Every line of TuxPL source code is protected by an 11-byte cryptographically bound terminator:
+Every line of program source code is protected by an explicit 11-byte cryptographic terminator preceded by a mandatory single space:
 ```text
-:[Σ|Χ;Ζ]
+ :[<sigma_b64>|<chi_gf>|<tau_tux>];<zeta>}
 ```
 
 ```text
-Format Breakdown:
-  :[  - 2-byte signature preamble (ASCII 0x3A 0x5B)
-  Σ   - Base64 Spectral Character (Line harmonic projection)
-  |   - 1-byte delimiter
-  Χ   - Galois Field F_{2^8} Syndrome Character (AES irreducible poly)
-  ;   - 1-byte delimiter
-  Ζ   - Base64 Hamming Collapse Character (Weighted metric)
-  ]   - 1-byte signature terminator (ASCII 0x5D)
+Terminator Layout (Exactly 11 bytes):
+  :[  - 2-byte preamble (ASCII 0x3A 0x5B)
+  σ   - Base64 cyclic spectral shift token (1 byte)
+  |   - 1-byte separator (ASCII 0x7C)
+  χ   - Galois Field F_{2^8} syndrome token (AES 0x11B) (1 byte)
+  |   - 1-byte separator (ASCII 0x7C)
+  τ   - 2-adic vs 3-adic wavelet analysis token ∈ {'T', 'U', 'X'} (1 byte)
+  ];  - 2-byte delimiter (ASCII 0x5D 0x3B)
+  ζ   - Hamming metric collapse token ∈ {'t', 'u', 'x', 'p', 'l'} (1 byte)
+  }   - 1-byte block terminator (ASCII 0x7D)
 ```
 
 ```text
                Line Prefix: "TuX  tux   TUX"
                         │
-       ┌────────────────┼────────────────┐
-       ▼                ▼                ▼
-[ Cyclic Shift ] [ Field F_{2^8} ] [ Hamming Collapse ]
-  Σ = Base64(H)    Χ = Poly(S)       Ζ = Hamming(P, ~"TUX")
-       │                │                │
-       └────────────────┼────────────────┘
-                        ▼
-            Terminator: ":[k|Ω;7]"
+       ┌────────────────┼────────────────┬────────────────┐
+       ▼                ▼                ▼                ▼
+[ Spectral Shift ] [ Galois Field ] [ p-Adic Wavelet ] [ Hamming Collapse ]
+     Base64            F_{2^8}        nu_2 vs nu_3       d_H(P, P_{prev})
+   σ = B64(acc)   χ = chr(33+S%94)    τ ∈ {T,U,X}        ζ ∈ {t,u,x,p,l}
+       │                │                │                │
+       └────────────────┴────────┬───────┴────────────────┘
+                                 ▼
+                 Terminator: " :[k|Ω|X];u}"
 ```
 
 ### 3.1. Mathematical Components of GBSV
 
-1. **Spectral Base64 Shift ($\Sigma$):**
-   Computed over line index $L$, token count $K$, and prefix byte sum:
-   $$H = \left(\sum_{j=0}^{|P|-1} P[j] \cdot (j+1) + (L \cdot 37) + (K \cdot 101)\right) \pmod{64}$$
-   $$\Sigma = \text{Base64Table}[H]$$
+1. **Cyclic Spectral Shift Base64 ($\sigma_{	ext{b64}}$):**
+   The line prefix $P$ of length $N$ is divided into 6-bit sliding windows $C_i$ offset by $i 	imes 6$ bits. Each chunk undergoes a cyclic left bit-shift by $s = i \pmod 6$:
+   $$V_i = 	ext{rotl}_6(C_i, i \pmod 6)$$
+   $$	ext{acc} = \sum_{i=0}^{K-1} (V_i \oplus (i \pmod{64}))$$
+   $$\sigma_{	ext{b64}} = 	ext{Base64Table}[	ext{acc} \pmod{64}]$$
 
-2. **Galois Field $\mathbb{F}_{2^8}$ Multiplicative Syndrome ($\mathrm{X}$):**
-   Evaluated in the Rijndael field $\mathbb{F}_{2^8} \cong \mathbb{Z}_2[x] / (x^8 + x^4 + x^3 + x + 1)$ (modular polynomial `0x11B`):
-   $$S_0 = \text{seed}_{L-1}$$
-   $$S_{j+1} = (S_j \bullet P[j]) \oplus P[j], \quad \text{where } \bullet \text{ denotes Galois field multiplication}$$
-   $$\mathrm{X} = \mathrm{inv}_{\mathrm{GF}}(S_{|P|}) \oplus 0\mathrm{xA5}$$
+2. **Galois Field $\mathbb{F}_{2^8}$ Multiplicative Syndrome ($\chi_{	ext{gf}}$):**
+   Evaluated over the Rijndael finite field $\mathbb{F}_{2^8} \cong \mathbb{Z}_2[x] / (x^8 + x^4 + x^3 + x + 1)$ with irreducible polynomial `0x11B`:
+   $$S = igoplus_{i=0}^{N-1} \mathrm{inv}_{\mathrm{GF}}(P[i] ullet lpha^{(i+1) \pmod{255}})$$
+   $$\chi_{	ext{gf}} = 	ext{chr}(33 + (S \pmod{94}))$$
+   where $ullet$ represents Galois multiplication, $lpha = 0x03$ is the generator element, and $\mathrm{inv}_{\mathrm{GF}}(y)$ is multiplicative inversion in $\mathbb{F}_{2^8}$ ($\mathrm{inv}(0) = 0$).
 
-3. **Hamming Metric Collapse ($Z$):**
-   Measures bitwise divergence against the constant seed mask `~"TUX"` (`0xDF 0xAA 0xA7`):
-   $$Z = \left(\sum_{j=0}^{|P|-1} \text{popcount}(P[j] \oplus K_{\mathrm{seed}}[j \bmod 3]) \cdot 13 + L\right) \pmod{64}$$
-   $$Z = \text{Base64Table}[Z]$$
+3. **$p$-Adic Wavelet Analysis ($	au_{	ext{tux}}$):**
+   The prefix $P$ is mapped to a 64-bit integer $W = \sum_{i=0}^{N-1} ((uint64)P[i] \ll (i \pmod 8))$. If $W = 0$, `'T'` is returned. Otherwise, 2-adic and 3-adic valuation orders are compared:
+   $$
+u_2(W) = 	ext{ctz}(W), \quad 
+u_3(W) = \max \{k \in \mathbb{N}_0 : 3^k \mid W\}$$
+   $$	au_{	ext{tux}} = egin{cases} 	ext{'X'}, & 	ext{if } 
+u_3(W) > 
+u_2(W) \ 	ext{'U'}, & 	ext{if } 
+u_2(W) > 
+u_3(W) \ 	ext{'T'}, & 	ext{if } 
+u_3(W) = 
+u_2(W) \end{cases}$$
 
-A single bit flip in code or whitespace produces an immediate syndrome collapse, triggering `PANIC_GBSV_GF` or `PANIC_GBSV_B64` with POSIX exit code `1`.
+4. **Hamming Metric Chain Collapse ($\zeta$):**
+   Measures bitwise Hamming distance between the current line prefix $P_{	ext{curr}}$ and the previous line prefix $P_{	ext{prev}}$ (the first line utilizes the genesis seed `TUX_SEED = "TUXPL_2.0_GENESIS"`):
+   $$d_H = \sum_{j=0}^{\max(N_c, N_p)-1} 	ext{popcount}(P_{	ext{curr}}[j] \oplus P_{	ext{prev}}[j])$$
+   $$\zeta = 	ext{ZETA\_TABLE}[d_H \pmod 5] \in \{'t', 'u', 'x', 'p', 'l'\}$$
 
----
+### 3.2. Elimination of Galois/Rijndael Drift Between Python and C
 
-## 4. Unified Memory 2.0 & Cellular Biological Lifecycle
+Because `tux_helper.py` serves as a critical compiler and code-generator, any minute arithmetic divergence (such as odd-bit window alignment at $k \pmod 6$ or generator powers $lpha^{i+1}$) immediately breaks runtime CFI verification (`PANIC_GBSV_GF`).
 
-TuxPL abandons traditional separated stack/heap architectures in favour of a **Von Neumann Unified Memory** of 65,536 cellular units (`TuxCell`):
+In [tests/test_py_gbsv_cross.py](file:///home/djanki/TuxPL/tests/test_py_gbsv_cross.py), a rigorous automated cross-verification harness is implemented:
+* Evaluates **1,010 test vectors** (extreme boundary conditions, empty prefix mutations, long polynomial streams, and 1,000 pseudorandom sequences).
+* Loads the C library `src/gbsv.c` via `ctypes` and verifies bit-for-bit identity of `(sigma_b64, chi_gf, tau_tux, zeta)` against the native Python implementation.
+* **Result:** 100% bitwise parity (0 bits drift). The cross-test is executed automatically as a mandatory prerequisite in `tests/run.sh`.
 
-```c
-typedef struct {
-    int64_t  val;          /* Canonical integer payload */
-    uint16_t raw_code;     /* 16-bit encoded instruction image */
-    uint8_t  type_tag;     /* Semantic type: i8, i16, i32, i64, TRIT, ADDR, OPCODE */
-    uint8_t  age;          /* Cellular generation: YOUNG, ADULT, OLD, DEAD */
-    uint8_t  gen;          /* Clone generation index (0..255) */
-    uint8_t  flags;        /* Bitflags: EXECUTABLE, MUTATED, CLONED, DORMANT */
-    uint32_t lineage;      /* Deterministic lineage identifier */
-    uint32_t exec_count;   /* Execution frequency counter */
-} TuxCell;
-```
-
-```text
-    ┌─────────────────────────────────────────────────────────────┐
-    │                 64K Unified Memory Space                    │
-    ├─────────────────────────────┬───────────────────────────────┤
-    │  [0 ... prog_len - 1]       │   [prog_len ... 65535]        │
-    │  Active Executable Core     │   Dynamic Data, Heap & Shadow │
-    └──────────────▲──────────────┴───────────────▲───────────────┘
-                   │                              │
-             PC_CODE (Fetch)                PC_DATA (Indirect)
-```
-
-### 4.1. Dual Program Counter Architecture
-Execution state maintains two independent registers:
-- `PC_CODE`: Execution pointer for instruction fetch and cellular aging.
-- `PC_DATA`: Base address pointer for indirect cellular access (`OP_LOADIND`, `OP_STOREIND`).
-
-Dedicated vector instructions arbitrate PC state:
-- `OP_PUSH_PC` (`tuuUUuuUUuUx`): Pushes `PC_CODE` with tag `TUX_TYPE_ADDR`.
-- `OP_SET_PC` (`tuuUUuuUUuUX`): Pops address $A$ and branches: $\mathrm{PC}_{\mathrm{code}} \leftarrow A \pmod{65536}$.
-- `OP_SWAP_PC` (`tuuUUuuUUUux`): Atomically exchanges $\mathrm{PC}_{\mathrm{code}} \leftrightarrow \mathrm{PC}_{\mathrm{data}}$.
-- `OP_ADD_PC` (`tuuUUuuUUUuX`): Relative offset displacement: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} + \Delta) \pmod{65536}$.
-- `OP_XOR_PC` (`tuuUUuuUUUUx`): Bitwise mask: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} \oplus M) \pmod{65536}$.
-
-### 4.2. Biological Cellular Degradation
-
-Every execution of a cell increments its `exec_count`. Cellular competence degrades across four non-reversible stages:
-
-```text
-  exec_count = 0        exec_count = 3        exec_count = 6        exec_count ≥ 9
-  ┌────────────┐        ┌────────────┐        ┌────────────┐        ┌────────────┐
-  │   YOUNG    │ ─────> │   ADULT    │ ─────> │    OLD     │ ─────> │    DEAD    │
-  │ Baseline   │        │ Genomic G1 │        │ CRAZY64    │        │ Immutable  │
-  │ Decoding   │        │ Distortion │        │ Convolution│        │ OP_NOP     │
-  └────────────┘        └────────────┘        └────────────┘        └────────────┘
-```
-
-1. **YOUNG** (`exec_count` $\in [0, 2]$): Opcode resolves directly through primary decoding table.
-2. **ADULT** (`exec_count` $\in [3, 5]$): Instruction decoded with genomic chromosome perturbation:
-   $$\text{opcode} \leftarrow (\text{opcode} \oplus G_1) \pmod{42}$$
-3. **OLD** (`exec_count` $\in [6, 8]$): Instruction subjected to ternary Malbolge convolution:
-   $$\text{opcode} \leftarrow \mathrm{crazy64}(\text{opcode}, G_2) \pmod{42}$$
-4. **DEAD** (`exec_count` $\ge 9$): The cell suffers terminal biological collapse. The cell permanently decodes as `OP_NOP` (`0x29`). The executable footprint cannot execute loops of length $> 8$ without cellular renewal via `OP_CLONE`.
-
-### 4.3. Post-Execution Auto-Mutation
-Upon completing an instruction, the cell value is mutated deterministically:
-$$\Delta = \mathrm{crazy64}(\mathrm{result}, \mathrm{entropy})$$
-$$\text{cell.val} \leftarrow \text{cell.val} \oplus (\Delta \pmod{256})$$
-$$\mathrm{cell.code} \leftarrow \mathrm{mutate}(\mathrm{cell.val}, K_{\mathrm{prog}}, G_0)$$
-$$\mathrm{cell.flags} \leftarrow \mathrm{cell.flags} \mid \mathrm{FLAG}_{\mathrm{MUTATED}}$$
+Any single-bit mutation or whitespace perturbation in TuxPL source code immediately triggers `PANIC_GBSV_GF`, `PANIC_GBSV_B64`, `PANIC_GBSV_TUX`, or `PANIC_GBSV_ZETA`, abruptly terminating the process.
 
 ---
 
-## 5. Adversarial Concurrency & Deterministic Quantum Scheduler
+## 4. Flat Cryptographic Torus $\mathbb{Z}_M$ & Latent Cell Invariants
 
-In Adversarial Mode (`--ADVERSARIAL`, formerly `--APOCALYPSE`), execution shifts to a **two-agent competitive runtime**:
+TuxPL 2.0.0 completely eliminates the legacy 40-byte bookkeeping structure `TuxCell`. The entire virtual machine memory is consolidated into a continuous one-dimensional array `uint32_t *unified_mem` residing on a **flat cryptographic torus $\mathbb{Z}_M$**:
+
+$$\mathbb{Z}_M = \mathbb{Z} / 7{,}436{,}429\mathbb{Z}, \quad |	ext{Memory}| = 65{,}536 	ext{ words (256 KB)}$$
+
+This paradigm erases the boundary between code and data: memory is homogeneous cryptographic noise. Every 32-bit machine word $W \in \mathbb{Z}_M$ carries latent mathematical properties evaluated dynamically on-the-fly.
+
+```text
+       ┌─────────────────────────────────────────────────────────────┐
+       │     Flat Modular Torus Z_M (65,536 words uint32_t)          │
+       ├─────────────────────────────┬───────────────────────────────┤
+       │  [0 ... prog_len - 1]       │   [prog_len ... 65535]        │
+       │  Active Executable Core     │   Data, Heap & Shadow Zone    │
+       └──────────────▲──────────────┴───────────────▲───────────────┘
+                      │                              │
+                PC_CODE (Fetch)                PC_DATA (Dual-PC)
+```
+
+### 4.1. Latent Machine-Word Invariants
+
+Every memory cell $W = 	ext{unified\_mem}[	ext{addr}]$ determines four latent quantum attributes:
+
+1. **Latent Cell Age via 3-Adic Valuation $
+u_3(W)$:**
+   Cell age reflects entropy degradation. In pure mathematics, the $p$-adic order of zero is undefined ($
+u_p(0) = \infty$), creating an infinite loop trap. The TuxPL kernel introduces a strict boundary condition:
+   $$
+u_3(0) = 3 \implies 	ext{DEAD}$$
+   For any $W > 0$, the valuation is the maximum power of three dividing $W$:
+   $$
+u_3(W) = \max \{k \in \mathbb{N}_0 : 3^k \mid W\}$$
+   $$	ext{Age}(W) = 
+u_3(W) \pmod 4 \in \{0: 	ext{YOUNG}, 1: 	ext{ADULT}, 2: 	ext{OLD}, 3: 	ext{DEAD}\}$$
+
+   * **YOUNG (0):** Opcode is decoded directly by the base dynamic decoder.
+   * **ADULT (1):** Opcode undergoes genomic mutation via chromosome $G_1$: $	ext{op} \leftarrow (	ext{op} \oplus G_1) \pmod{42}$.
+   * **OLD (2):** Opcode is distorted by CRAZY64 ternary convolution: $	ext{op} \leftarrow 	ext{tux\_crazy64}(	ext{op}, G_2) \pmod{42}$.
+   * **DEAD (3):** Complete cellular collapse. Cell irreversibly degrades into an inert `OP_NOP` (`41`).
+
+2. **Latent Operand Type:**
+   Derived from the modular projection offset of invariant $0x5A$ (90):
+   $$	ext{Type}(W) = (W \oplus 0x5A) \pmod 6$$
+   * `0`: `TUX_TYPE_ADDR` (Address on torus $\mathbb{Z}_M$)
+   * `1`: `TUX_TYPE_I8` (8-bit signed integer)
+   * `2`: `TUX_TYPE_I16` (16-bit signed integer)
+   * `3`: `TUX_TYPE_I32` (32-bit modular integer)
+   * `4`: `TUX_TYPE_I64` (64-bit extended integer)
+   * `5`: `TUX_TYPE_OPCODE` (Executable kernel opcode)
+
+3. **Affine Ownership Invariant (Borrow Checker):**
+   In torus $\mathbb{Z}_M$, 17 is one of the six generating prime moduli ($m_3 = 17$). A memory cell is considered **Moved / Consumed** if and only if it is a multiple of 17:
+   $$W \equiv 0 \pmod{17} \iff 	ext{Cell is Moved}$$
+   Any instruction fetch (`Fetch`) from $\mathrm{PC}_{\mathrm{code}}$ or indirect data read (`OP_LOADIND`) at a location where $W \equiv 0 \pmod{17}$ is caught as *Use-After-Move*, triggering:
+   ```text
+   [VM_PANIC] PANIC_AFFINE_USE_AFTER_MOVE: Affine borrow checker: cell moved (W = 0 mod 17)
+   ```
+
+4. **Torsion Data Pointer Shift ($\Delta \mathrm{PCD}$):**
+   During indirect operations and decoding, data pointer $\mathrm{PCD}$ dynamically advances by the population count of the word:
+   $$\mathrm{PCD}_{t+1} = (\mathrm{PCD}_t + 	ext{popcount}(W) + 1) \pmod{65536}$$
+
+### 4.2. Post-Execution Irreversible Mutation (SP-Round)
+
+Upon executing an instruction, the cell at $\mathrm{PC}_{\mathrm{code}}$ undergoes irreversible mutation, obliterating the executed bytecode via an SP-Round based on the AES Substitution Box (S-Box):
+
+$$W' = ((	ext{AES\_SBOX}[W \ \& \ 	ext{0xFF}] \ll 16) \oplus (W \gg 8) \oplus (\mathrm{PC}_{\mathrm{code}} 	imes 3)) \pmod M$$
+
+**Cycle False-Move Protection:**
+If after the SP-Round mutation the resulting pseudorandom value $W'$ happens to be a multiple of 17 ($W' \equiv 0 \pmod{17}$), the kernel deterministically increments: $W' \leftarrow (W' + 1) \pmod M$. This guarantees that instructions executing inside loops (such as Cyber-Reactor) do not inadvertently trigger borrow checker panics upon subsequent loop iterations.
+
+---
+
+## 5. Monolithic Adversarial Concurrency by Default & Quantum Scheduler
+
+TuxPL 2.0.0 completely eliminates disparate startup modes. Adversarial execution of two isolated agents across the flat torus $\mathbb{Z}_M$ is the **sole, uncompromised runtime behavior (Zero-Flag Monolithic Torus)**.
 
 ```text
        ┌─────────────────────────────────────────────────────────┐
-       │                   Unified Memory (64K)                  │
+       │               Flat Torus Z_M (64K uint32_t)             │
        └────────────▲────────────────────────▲───────────────────┘
                     │                        │
              ┌──────┴──────┐          ┌──────┴──────┐
              │  Context A  │          │  Context B  │
-             │ (User, PC=0)│          │ (Shadow PC) │
+             │ (User Main) │          │ (Adversary) │
              └──────▲──────┘          └──────▲──────┘
                     │                        │
                     └───────────┬────────────┘
                                 │
                     ┌───────────┴────────────┐
-                    │ Quantum Scheduler Step │
+                    │    Quantum Scheduler   │
                     │      (scheduler.c)     │
                     └────────────────────────┘
 ```
 
-- **Context A (Primary Agent):** Executes user program starting at $\mathrm{PC}_{\mathrm{code}, A} = 0$, $\mathrm{PC}_{\mathrm{data}, A} = 1024$.
-- **Context B (Shadow Adversary):** Instantiated at a pseudo-random memory boundary derived from program FNV-1a key and genomic chromosome $G_1$:
+- **Context A (Main Execution Thread):** User program initialized at $\mathrm{PC}_{\mathrm{code}, A} = 0$, $\mathrm{PC}_{\mathrm{data}, A} = 1024$.
+- **Context B (Shadow Adversary):** Injected into a pseudorandom memory location derived from the program FNV-1a hash and genome chromosome $G_1$:
   $$\mathrm{PC}_{\mathrm{code}, B} = (K_{\mathrm{prog}} \oplus G_1) \pmod{65536}$$
   $$\mathrm{PC}_{\mathrm{data}, B} = (\mathrm{PC}_{\mathrm{code}, B} + 512 + (G_2 \pmod{1024})) \pmod{65536}$$
-  Context B registers and entropy are initialized from the companion `.tu` container. Context B executes concurrently within the shadow region (`prog_len` $\dots 65535$), modifying background cells and altering registers.
+  Registers and entropy for Context B are seeded from the binary companion container `.tu`. The adversary executes within the memory torus, exerting continuous pressure on user state.
 
-### 5.1. Deterministic Scheduler Metric
-Context switching does not rely on OS preemption. At each machine cycle, the scheduler computes an entropy metric over active memory and hardware registers:
-$$\mu = \mathrm{FNV1a}(\vec{R}) \oplus \mathrm{mem}[\mathrm{PC}].\mathrm{val} \oplus \mathrm{step}$$
-$$\text{Active Context} \leftarrow \begin{cases} \text{Context A}, & \text{if } (\mu \oplus G_0) \pmod 2 = 0 \\ \text{Context B}, & \text{if } (\mu \oplus G_0) \pmod 2 = 1 \end{cases}$$
+### 5.1. The Orphan Paradox & The `--no-shadow` Flag
 
-### 5.2. Differential Register Coupling
-Registers $R_0 \dots R_3$ are interconnected across a non-linear feedback loop evaluated at each clock cycle:
+Because the adversarial engine is monolithic, launching any program with zero flags (`./tuxpl program.tux`) mandates the presence of the paired 88-byte companion container `program.tu`.
+* If a programmer writes `test.tux` in a text editor and executes it directly, the runtime panics immediately:
+  ```text
+  [VM_PANIC] PANIC_COMPANION_ORPHAN: Required companion metadata container (.tu) not found
+  ```
+  The language fundamentally rejects unsigned code lacking companion metadata.
+* **Local Mode `--no-shadow` (alias `--deterministic`):** The primary development workflow for unit testing and local experimentation without companion generation. Disables Context B spawning and runs strictly in single-context mode.
+
+### 5.2. Metabolic Gas Budget
+
+Execution is strictly bounded by a metabolic gas budget:
+* The initial budget defaults to **100 units** of gas.
+* Every executed instruction consumes 1 unit of gas.
+* Upon budget exhaustion, the VM halts with POSIX code 3 (`PANIC_BUDGET_EXHAUSTION`).
+* The only mechanism to sustain long-running programs (such as Cyber-Reactor) is periodic energetic replenishment via `OP_FISH` (`tuuUUuuUuux`).
+
+### 5.3. Thermodynamic Reversibility (`--reversible` & `OP_UNDO`)
+
+TuxPL supports temporal reversibility through a thermodynamic ring buffer `TuxHistoryBuffer`:
+* Enabled exclusively via `--reversible` (or `--REVERSIBLE`).
+* When active, `OP_UNDO` (`tuuUUuUUuuX`) performs a physical rollback of the last state modification (registers, stack, and memory).
+* Executing `OP_UNDO` without `--reversible` produces a specification panic:
+  ```text
+  [VM_PANIC] PANIC_SPEC_NO_HISTORY: Attempted state rollback (OP_UNDO) without reversible snapshot buffer
+  ```
+
+### 5.4. Deterministic Quantum Scheduler & Differential Register Coupling
+
+Context switching is deterministic and independent of operating system timers. At each execution step, an entropy convolution of registers and torus memory is computed:
+$$\mu = \mathrm{FNV1a}(ec{R}) \oplus 	ext{unified\_mem}[\mathrm{PC}_{\mathrm{code}}] \oplus 	ext{step}$$
+$$	ext{Active Context} \leftarrow egin{cases} 	ext{Context A}, & 	ext{if } (\mu \oplus G_0) \pmod 2 = 0 \ 	ext{Context B}, & 	ext{if } (\mu \oplus G_0) \pmod 2 = 1 \end{cases}$$
+
+Registers $R_0 \dots R_3$ undergo differential non-linear cross-coupling at each instruction cycle:
 $$\delta_1 = \mathrm{crazy64}(R_0, R_1) \pmod{256}, \quad R_1 \leftarrow R_1 + \delta_1$$
 $$\delta_2 = \mathrm{crazy64}(R_1, R_2) \pmod{256}, \quad R_2 \leftarrow R_2 + \delta_2$$
 $$\delta_3 = \mathrm{crazy64}(R_2, R_3) \pmod{256}, \quad R_3 \leftarrow R_3 + \delta_3$$
 $$\delta_0 = \mathrm{crazy64}(R_3, R_0) \pmod{256}, \quad R_0 \leftarrow R_0 \oplus \delta_0$$
 
-### 5.3. Thermodynamic Time Debt
-Instructions accumulate an entropy debt `time_debt`:
-- Standard instruction: $+1$
-- Complex non-linear instructions (`CRAZY`, `CAST`): $+1 + (\text{entropy} \pmod 3)$
-- Cellular clone (`CLONE`): $+5$
+### 5.5. Thermodynamic Time Debt
+Instructions accumulate temporal debt `time_debt`:
+- Standard instructions: $+1$
+- Heavy non-linear operations (`CRAZY`, `CAST`): $+1 + (	ext{entropy} \pmod 3)$
+- Cellular cloning (`CLONE`): $+5$
 
-If `time_debt` $> 5000$, memory corruption occurs. The debt must be liquidated via `OP_PAY_TIME` at the cost of execution fuel (`gas_budget`).
+If `time_debt` $> 5000$, memory enters phase collapse. Time debt must be amortized via `OP_PAY_TIME` at the expense of metabolic gas (`gas_budget`).
 
 ---
 
 ## 6. Type System, Stack Dynamics & Ternary Logic
 
-### 6.1. Affine Move Semantics (Borrow Checker)
-Variables and cellular units adhere to strict affine typing:
-- Reading a variable via `OP_LOAD` transfers ownership (`Move`).
-- Attempting a secondary read without an intervening `OP_STORE` triggers `PANIC_AFFINE_USE_AFTER_MOVE` and terminates with POSIX exit code `3`.
+### 6.1. Affine Move Semantics (Borrow Checker) on Flat Torus
+Variables and memory cells operate under strict affine move semantics:
+- Reading a variable via `OP_LOAD` moves the value to the stack, marking the memory cell as moved ($W \leftarrow 17$).
+- Subsequent reads without an intervening `OP_STORE` trigger `PANIC_AFFINE_USE_AFTER_MOVE` (POSIX code `3`).
+- Indirect reading via `OP_LOADIND` on any address where $W \equiv 0 \pmod{17}$ similarly triggers an immediate move-after-use abort.
 
 ### 6.2. Stack Gravitational Invariant
-The operand evaluation stack enforces a dynamic gravity constraint:
+The operand stack is subjected to dynamic acceleration limits:
 - Consecutive push operations increase stack tension.
-- If more than 7 push instructions occur without an intervening arithmetic, reduction, or pop operation, stack gravity collapses:
-  $$\mathrm{depth} > 7 \implies \text{Stack Gravity Overflow [Exit Code 3]}$$
+- Exceeding 7 consecutive `PUSH` instructions without intermediate computation or pops triggers gravitational collapse:
+  $$\mathrm{depth} > 7 \implies 	ext{Stack Gravity Overflow [Exit Code 3]}$$
 
 ### 6.3. Balanced 64-Bit Ternary CRAZY Logic
-TuxPL embeds a 64-bit extension of the Malbolge ternary operation across 40 trits ($3^{40}$ space):
+TuxPL implements a 40-trit extension of Malbolge’s ternary crazy operation ($3^{40}$ states):
 
-$$\text{CRAZY}(t_a, t_b) \quad \text{truth table:}$$
+$$	ext{CRAZY}(t_a, t_b) \quad 	ext{truth table:}$$
 
-| $t_a \backslash t_b$ | 0 | 1 | 2 |
+| $t_a ackslash t_b$ | 0 | 1 | 2 |
 | :---: | :---: | :---: | :---: |
 | **0** | 1 | 0 | 0 |
 | **1** | 1 | 0 | 2 |
 | **2** | 2 | 2 | 1 |
 
-Applied across all trit positions via parallel bitmask bit-slicing in `src/state.c`.
+Implemented via parallel bitwise SIMD emulation in `src/state.c`.
 
 ---
 
 ## 7. Complete Opcode Reference (Table of 42 Opcodes)
 
-TuxPL 2.0.0 defines exactly 42 opcodes ($0 \dots 41$).
-
-| Code | Mnemonic | Classical Representation | Mathematical Semantics |
+| Opcode | Mnemonic | Classic Trajectory | Mathematical Semantics |
 | :---: | :--- | :--- | :--- |
-| `0` | `OP_ADD` | `TuX` | $a, b \to (a + b)$ |
-| `1` | `OP_SUB` | `Tux` | $a, b \to (a - b)$ |
-| `2` | `OP_MUL` | `TUx` | $a, b \to (a \times b)$ |
-| `3` | `OP_DIV` | `TUX` | $a, b \to (a / b)$, checks $b \neq 0$ |
-| `4` | `OP_DUP` | `tux` | $a \to a, a$ |
-| `5` | `OP_SWAP` | `tuX` | $a, b \to b, a$ |
-| `6` | `OP_POP` | `tUx` | $a \to \varnothing$ |
-| `7` | `OP_PRINTCHAR`| `tUX` | Emits $(a \bmod 256)$ as ASCII character |
-| `8` | `OP_PUSH` | `Tuu<bits>X` | Pushes immediate integer $N$ onto stack |
-| `9` | `OP_LOAD` | `Tuu<bits>x` | Transfers ownership from `vars[N]` (Move) |
-| `10`| `OP_STORE` | `TuU<bits>x` | Stores top of stack into `vars[N]` |
-| `11`| `OP_LOADIND` | `TuU<bits>X` | Reads `mem[PC_DATA + offset]` |
+| `0` | `OP_ADD` | `TuX` | $a, b 	o (a + b)$ |
+| `1` | `OP_SUB` | `Tux` | $a, b 	o (a - b)$ |
+| `2` | `OP_MUL` | `TUx` | $a, b 	o (a 	imes b)$ |
+| `3` | `OP_DIV` | `TUX` | $a, b 	o (a / b)$, checks $b 
+eq 0$ |
+| `4` | `OP_DUP` | `tux` | $a 	o a, a$ |
+| `5` | `OP_SWAP` | `tuX` | $a, b 	o b, a$ |
+| `6` | `OP_POP` | `tUx` | $a 	o arnothing$ |
+| `7` | `OP_PRINTCHAR`| `tUX` | Emits $(a mod 256)$ as ASCII character |
+| `8` | `OP_PUSH` | `Tuu<bits>X` | Pushes constant $N$ onto stack |
+| `9` | `OP_LOAD` | `Tuu<bits>x` | Move value from `vars[N]` onto stack |
+| `10`| `OP_STORE` | `TuU<bits>x` | Stores stack top into `vars[N]` |
+| `11`| `OP_LOADIND` | `TuU<bits>X` | Reads `mem[PC_DATA + offset]` (requires $W 
+ot\equiv 0 \pmod{17}$) |
 | `12`| `OP_STOREIND`| `TUu<bits>x` | Writes `mem[PC_DATA + offset] = val` |
-| `13`| `OP_JMP` | `TUu<bits>X` | Sets $\mathrm{PC}_{\mathrm{code}} \leftarrow N$ |
+| `13`| `OP_JMP` | `TUu<bits>X` | Jump: $\mathrm{PC}_{\mathrm{code}} \leftarrow N$ |
 | `14`| `OP_JZ` | `TUU<bits>x` | Conditional branch if $a == 0$ |
-| `15`| `OP_JNZ` | `TUU<bits>X` | Conditional branch if $a \neq 0$ |
-| `16`| `OP_CMP` | `tuu<bits>X` | $a, b \to \text{sgn}(a - b) \in \{-1, 0, 1\}$ |
-| `17`| `OP_LISTNEW` | `tuuUUuux` | Allocates dynamic vector in Unified Memory |
-| `18`| `OP_LISTPUSH`| `tuuUUuuX` | Appends element to dynamic vector |
-| `19`| `OP_LISTGET` | `tuuUUuUx` | Index read from dynamic vector |
-| `20`| `OP_LISTSET` | `tuuUUuUX` | Index write to dynamic vector |
-| `21`| `OP_LISTLEN` | `tuuUUUUx` | Queries dynamic vector length |
-| `22`| `OP_PRINTNUM`| `tUU<bits>x` | Emits integer as decimal string |
-| `23`| `OP_INPUTNUM`| `tUU<bits>X` | Reads signed decimal integer from stdin |
-| `24`| `OP_REGGET` | `TuU<reg>X` | Pushes hardware register $R_k$ ($k \in [0, 3]$) |
-| `25`| `OP_REGSET` | `TUu<reg>x` | Pops into hardware register $R_k$ |
-| `26`| `OP_FISH` | `tuuUUuuUuux` | `OP_REPLENISH_GAS`: Adds fuel to `gas_budget` |
-| `27`| `OP_CRAZY` | `tuuUUuuUuuX` | 64-bit balanced ternary Malbolge convolution |
-| `28`| `OP_CAST` | `tuu<bits>x` | Explicit re-tagging of numeric type |
-| `29`| `OP_DIR` | `tuuUUuuUuUx` | Reverses evaluation stack direction |
-| `30`| `OP_PUSH_PC` | `tuuUUuuUUuUx`| Pushes current `PC_CODE` |
-| `31`| `OP_SET_PC` | `tuuUUuuUUuUX`| $\mathrm{PC}_{\mathrm{code}} \leftarrow a \pmod{65536}$ |
-| `32`| `OP_SWAP_PC` | `tuuUUuuUUUux`| $\mathrm{PC}_{\mathrm{code}} \leftrightarrow \mathrm{PC}_{\mathrm{data}}$ |
-| `33`| `OP_ADD_PC` | `tuuUUuuUUUuX`| $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} + \Delta) \pmod{65536}$ |
-| `34`| `OP_XOR_PC` | `tuuUUuuUUUUx`| $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} \oplus M) \pmod{65536}$ |
-| `35`| `OP_CLONE` | `tuuUUuuUUUUX`| Clones cell to address with generation increment |
-| `36`| `OP_DECAY` | `tuuUUuUUuuux`| Manually ages cell by $+1$ generation |
-| `37`| `OP_WAKE` | `tuuUUuUUuuuX`| Clears `TUX_FLAG_DORMANT` flag at target cell |
-| `38`| `OP_REINTERPRET`| `tuuUUuUUuux`| Reinterprets numeric payload as raw instruction |
-| `39`| `OP_UNDO` | `tuuUUuUUuuX`| Restores execution frame from reversible ring |
-| `40`| `OP_PAY_TIME`| `tuuUUuUUuUx`| Liquidates accumulated time debt |
-| `41`| `OP_NOP` | `tuuUUuUUuUX`| No operation (Terminal state of `DEAD` cells) |
+| `15`| `OP_JNZ` | `TUU<bits>X` | Conditional branch if $a 
+eq 0$ |
+| `16`| `OP_CMP` | `tuu<bits>X` | $a, b 	o 	ext{sgn}(a - b) \in \{-1, 0, 1\}$ |
+| `17`| `OP_LISTNEW` | `tuuUUuux` | Allocates dynamic vector in torus memory |
+| `18`| `OP_LISTPUSH`| `tuuUUuuX` | Appends element to vector |
+| `19`| `OP_LISTGET` | `tuuUUuUx` | Reads from vector index |
+| `20`| `OP_LISTSET` | `tuuUUuUX` | Writes to vector index |
+| `21`| `OP_LISTLEN` | `tuuUUUUx` | Returns vector length |
+| `22`| `OP_PRINTNUM`| `tUU<bits>x` | Prints decimal number |
+| `23`| `OP_INPUTNUM`| `tUU<bits>X` | Reads decimal number from stdin |
+| `24`| `OP_REGGET` | `TuU<reg>X` | Reads register $R_k$ ($k \in [0, 3]$) onto stack |
+| `25`| `OP_REGSET` | `TUu<reg>x` | Writes stack top to register $R_k$ |
+| `26`| `OP_FISH` | `tuuUUuuUuux` | `OP_REPLENISH_GAS`: Replenishes gas budget ($+50$) |
+| `27`| `OP_CRAZY` | `tuuUUuuUuuX` | 64-bit ternary Malbolge convolution |
+| `28`| `OP_CAST` | `tuu<bits>x` | Explicit semantic type tag conversion |
+| `29`| `OP_DIR` | `tuuUUuuUuUx` | Inverts stack direction |
+| `30`| `OP_PUSH_PC` | `tuuUUuuUUuUx`| Pushes current $\mathrm{PC}_{\mathrm{code}}$ |
+| `31`| `OP_SET_PC` | `tuuUUuuUUuUX`| Branch: $\mathrm{PC}_{\mathrm{code}} \leftarrow a \pmod{65536}$ |
+| `32`| `OP_SWAP_PC` | `tuuUUuuUUUux`| Swap: $\mathrm{PC}_{\mathrm{code}} \leftrightarrow \mathrm{PC}_{\mathrm{data}}$ |
+| `33`| `OP_ADD_PC` | `tuuUUuuUUUuX`| Relative offset: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} + \Delta) \pmod{65536}$ |
+| `34`| `OP_XOR_PC` | `tuuUUuuUUUUx`| Masking: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} \oplus M) \pmod{65536}$ |
+| `35`| `OP_CLONE` | `tuuUUuuUUUUX`| Clones cell with generational evolution |
+| `36`| `OP_DECAY` | `tuuUUuUUuuux`| Forces cell aging to $	ext{DEAD}$ ($W \leftarrow 0$) |
+| `37`| `OP_WAKE` | `tuuUUuUUuuuX`| Awakens cell from $	ext{DEAD}$ ($W \leftarrow 1$) |
+| `38`| `OP_REINTERPRET`| `tuuUUuUUuux`| Reinterprets data word as executable opcode |
+| `39`| `OP_UNDO` | `tuuUUuUUuuX`| Reversible state rollback via history buffer |
+| `40`| `OP_PAY_TIME`| `tuuUUuUUuUx`| Amortizes temporal debt via gas budget |
+| `41`| `OP_NOP` | `tuuUUuUUuUX`| Inert operation (terminal dead-cell state) |
 
 ---
 
-## 8. Diagnostic Subsystem & POSIX Diagnostic Specification
+## 8. Diagnostic Subsystem & POSIX Exit Codes
 
-TuxPL replaces troll routines with a strictly typed diagnostic architecture (`src/diag.c`, `src/diag.h`). Any fatal condition produces a formatted stderr vector and a deterministic exit status.
+TuxPL implements an unambiguous diagnostic panic subsystem (`[VM_PANIC]`). Messages are emitted to `stderr` in standard canonical format:
 
-### Diagnostic Output Format
 ```text
-[VM_PANIC] <CATEGORY_CODE>: <Exact descriptive failure reason>
-  --> Location: line <num>
+[VM_PANIC] PANIC_<CATEGORY>_<DETAIL>: <Human readable diagnostic message>
 ```
 
 ### Deterministic Exit Codes
 
-| POSIX Code | Failure Class | Diagnostics Enumeration |
+| POSIX Code | Semantic Category | Representative Panics |
 | :---: | :--- | :--- |
-| **`1`** | **Mathematical & CFI Violations** | `PANIC_GBSV_SYNTAX`, `PANIC_GBSV_B64`, `PANIC_GBSV_GF`, `PANIC_GBSV_TUX`, `PANIC_GBSV_ZETA`, `PANIC_IO_ERROR`, `PANIC_SYNTAX_ERROR`, `PANIC_DIVZERO`, `PANIC_ARITHMETIC_OVERFLOW` |
-| **`2`** | **Structural Specification Violations** | `PANIC_SPEC_FILENAME_MISMATCH`, `PANIC_SPEC_MISSING_LIBRARY`, `PANIC_SPEC_LINE_CYCLE`, `PANIC_SPEC_CHECKSUM`, `PANIC_SPEC_WHITESPACE_PARITY`, `PANIC_SPEC_BAD_JUMP`, `PANIC_SPEC_NO_HISTORY`, `PANIC_COMPANION_ORPHAN`, `PANIC_COMPANION_HERESY` |
-| **`3`** | **Resource & Memory Safety Collapses** | `PANIC_BUDGET_EXHAUSTION`, `PANIC_STACK_GRAVITY_OVERFLOW`, `PANIC_AFFINE_USE_AFTER_MOVE`, `PANIC_TYPE_MISMATCH`, `PANIC_STACK_UNDERFLOW`, `PANIC_MEM_OUT_OF_BOUNDS`, `PANIC_DECODE_COLLAPSE`, `PANIC_MUTATION_COLLAPSE`, `PANIC_GENOME_DIVERGENCE`, `PANIC_EXECUTION_COLLAPSE` |
-
-On successful, fully verified execution, the VM emits:
-```text
-Execution terminated cleanly. State verified.
-```
+| **`1`** | **Runtime Arithmetic Errors** | `PANIC_RUNTIME_MATH_DIV_ZERO`, `PANIC_RUNTIME_STACK_UNDERFLOW`, `PANIC_GBSV_GF`, `PANIC_GBSV_B64`, `PANIC_GBSV_TUX`, `PANIC_GBSV_ZETA` |
+| **`2`** | **Specification, CFI & Companion** | `PANIC_SPEC_LEGACY_REJECTED`, `PANIC_SPEC_FILENAME_MISMATCH`, `PANIC_SPEC_HARMONIC_VIOLATION`, `PANIC_SPEC_MISSING_PRELUDE`, `PANIC_COMPANION_ORPHAN`, `PANIC_COMPANION_HERESY`, `PANIC_SPEC_NO_HISTORY` |
+| **`3`** | **Resources, Memory & Ownership** | `PANIC_AFFINE_USE_AFTER_MOVE`, `PANIC_STACK_GRAVITY_OVERFLOW`, `PANIC_BUDGET_EXHAUSTION`, `PANIC_OUT_OF_MEMORY` |
 
 ---
 
 ## 9. Binary Companion Specification (`.tu` Container)
-
-In modes requiring cryptographically bound companion files (`--ADVERSARIAL`), the bytecode must be paired with an 88-byte binary file named `<prefix>.tu`.
 
 ### Binary Memory Layout
 
 ```text
 Offset    Size   Field Description
 ─────────────────────────────────────────────────────────────────
-0x00      4 B    Magic Identifier: 0x54 0x55 0x58 0x32 ("TUX2")
+0x00      4 B    Magic Signature:  0x54 0x55 0x58 0x32 ("TUX2")
 0x04      4 B    Format Version:   0x00000002
-0x08      8 B    FNV-1a 64-bit Digest of Target .tux Source
-0x10      8 B    Initial Entropy Pool Seed
-0x18      8 B    Genome Chromosome 0 (G0: Structural Mutation Key)
-0x20      8 B    Genome Chromosome 1 (G1: Context B Code Pointer Key)
-0x28      8 B    Genome Chromosome 2 (G2: Context B Data Pointer Key)
-0x30      8 B    Genome Chromosome 3 (G3: Dormant Resonance Key)
-0x38      8 B    Hardware Register R0 Initial State
-0x40      8 B    Hardware Register R1 Initial State
-0x48      8 B    Hardware Register R2 Initial State
-0x50      8 B    Hardware Register R3 Initial State
+0x08      8 B    64-bit FNV-1a Hash of source file .tux
+0x10      8 B    Initial Entropy Seed
+0x18      8 B    Genome Chromosome 0 (G0: Structural mutation key)
+0x20      8 B    Genome Chromosome 1 (G1: Context B Code Pointer)
+0x28      8 B    Genome Chromosome 2 (G2: Context B Data Pointer)
+0x30      8 B    Genome Chromosome 3 (G3: Awakening harmonic)
+0x38      8 B    Initial Register R0
+0x40      8 B    Initial Register R1
+0x48      8 B    Initial Register R2
+0x50      8 B    Initial Register R3
 ─────────────────────────────────────────────────────────────────
-Total: 88 Bytes strictly aligned.
+Total: Exactly 88 bytes of structured binary data.
 ```
 
-If the companion file is missing, the VM terminates with `PANIC_COMPANION_ORPHAN` (code 2). If the FNV-1a digest does not match the `.tux` file bit-for-bit, it terminates with `PANIC_COMPANION_HERESY` (code 2).
+Missing companion files abort execution with `PANIC_COMPANION_ORPHAN` (code 2). FNV-1a checksum mismatches abort with `PANIC_COMPANION_HERESY` (code 2).
 
 ---
 
 ## 10. Building, Verification & Tooling
 
 ### 10.1. Build System
-The runtime is written in ISO C99 and requires a standard POSIX.1-2001 environment (GCC or Clang):
+The runtime is authored in standard ISO C99 and compiles with any POSIX C compiler:
 
 ```bash
-# Build optimized release binary
+# Build monolithic release binary
 make
 
 # Clean compilation artifacts
@@ -472,43 +534,46 @@ make clean
 ```
 
 ### 10.2. Formal Test Suite (100% Passing)
-The validation framework includes unit, integration, invariant, and regression tests:
+The verification suite exercises unit, integration, and invariant layers:
 
 ```bash
-# Run complete test suite (90/90 suites + 74k assertions)
+# Run all 8 test suites and 74k+ formal mathematical assertions
 make test
 ```
 
-#### Test Suite Composition:
-1. **De Bruijn & RNS-CRT Verification (`make test-rns`):**
-   - **Bézout Modular Inverses:** Complete verification of $C_i \equiv 1 \pmod{m_i}$ and $C_i \equiv 0 \pmod{m_j}$.
-   - **CRT Isomorphism:** $100{,}000$ pseudorandom vectors confirming $\text{decode}(\text{encode}(N)) == N$.
-   - **Pigeonhole Resolution:** Strict validation of 12-char Radix-6 coverage for $m_5=23$.
-   - **Dense Stream Parsing:** Verification of operand parsing without `\0` terminators.
-   - **De Bruijn Graph Completeness:** $10{,}584$ state-opcode pairs verified via BFS reachability within $\le 3$ transitions.
-   - **Avalanche Diffusion:** 1-symbol mutation entropy verification across the residue ring.
-2. **Galois Field Syndrome Verification (`test-gbsv`):** 24/24 tests covering field inverses, generator polynomials, and syndrome sensitivity.
-3. **Classic Execution Suite (`tests/run.sh`):** 15/15 tests covering basic arithmetic, branching, and dynamic lists.
-4. **Strict Specification Suite (`tests/test_cursed.sh`):** 8/8 tests verifying bit-size naming, whitespace parity, and checksums.
-5. **Unified Memory Safety Suite (`tests/test_hardcore.sh`):** 12/12 tests validating affine move semantics, stack gravity, and fuel exhaustion.
-6. **Golden Vectors Suite (`tests/test_golden_vectors.sh`):** 22/22 tests verifying deterministic reproducibility of FNV-1a, CRAZY64, and cellular aging.
-7. **Adversarial Engine Suite (`tests/test_apocalypse.sh`):** 9/9 tests verifying dual-context scheduling, companion integrity, and thermodynamic undo.
+#### Test Suite Composition (8 Test Suites):
+1. **Galois Field Verification (`make test-gbsv`):** 24/24 tests verifying $\mathbb{F}_{2^8}$ multiplicative inversion, the Rijndael polynomial, and GBSV signature sensitivity.
+2. **De Bruijn Automaton & RNS-CRT Engine (`make test-rns`):**
+   - **Bézout Inverses:** $C_i \equiv 1 \pmod{m_i}$ and $C_i \equiv 0 \pmod{m_j}$.
+   - **CRT Isomorphism:** 100,000 pseudorandom integers verified for $\text{decode}(\text{encode}(N)) == N$.
+   - **Dirichlet Resolution:** 100% residue coverage of $m_5=23$ via 12-char Radix-6 suffix.
+   - **Streaming Decoder:** Zero-byte-agnostic parsing from raw bytecode buffers.
+   - **De Bruijn Completeness:** All 10,584 pairs reached within $\le 3$ transitions.
+   - **Avalanche Diffusion:** 1-character perturbations propagate maximal entropy.
+   *(74,307 formal assertions)*
+3. **Flat Torus $\mathbb{Z}_M$ Core (`make test-flat-core`):** 36/36 checks verifying latent age ($
+u_3(0) = 3$), latent types ($0x5A$), Affine Move Checker ($W \equiv 0 \pmod{17}$), and SP-Round loop protection.
+4. **Galois/Rijndael Python $\leftrightarrow$ C Cross-Test (`tests/test_py_gbsv_cross.py`):** 1,010/1,010 test vectors verifying bit-for-bit identity (0 bits drift).
+5. **Classic Monolithic Test Suite (`tests/run.sh`):** 15/15 tests covering stack, arithmetic, branching, and dynamic lists.
+6. **Structural Invariants Suite (`tests/test_cursed.sh`):** 8/8 tests verifying bit length filenames, whitespace parity, and checksums.
+7. **Memory Safety & Purgatory Suite (`tests/test_hardcore.sh`):** 12/12 tests validating borrow-checker, stack gravity, and gas exhaustion.
+8. **Golden Vectors Suite (`tests/test_golden_vectors.sh`):** 22/22 tests validating deterministic FNV-1a, CRAZY64, and cell aging.
+9. **Monolithic Adversarial Suite (`tests/test_apocalypse.sh`):** 11/11 tests validating dual-context scheduling, adversary injection, `OP_UNDO` reversibility, and the orphan paradox.
 
 ```text
 Verification Summary:
-  Total Suites:        7 / 7   (100% PASS)
-  Individual Suites:   90 / 90 (100% PASS)
-  RNS/DeBruijn Checks: 74,307  (100% PASS)
+  Test Suites:         8 / 8   (100% PASS)
+  Total Assertions:    74,445  (100% PASS)
   Compiler Warnings:   0       (-Wall -Wextra -pedantic)
+  Memory Sanitizers:   ASan + UBSan (0 leaks, 0 undefined behavior)
 ```
 
 ### 10.3. Python Toolchain (`tux_helper.py`)
-The repository includes a companion compiler and diagnostic CLI:
 
 ```bash
 # De Bruijn opcode synthesis
 python3 tux_helper.py debruijn 8 0x5A
-# Outputs: Fixed-3 trajectory and minimal path resolving to OP_PUSH
+# Outputs: 3-character path and minimal trajectory resolving to OP_PUSH
 
 # RNS operand encoding
 python3 tux_helper.py rns-enc 42
@@ -518,33 +583,38 @@ python3 tux_helper.py rns-enc 42
 python3 tux_helper.py rns-dec TTtuTutUTXut
 # Outputs: 42
 
+# Compute GBSV signature for line
+python3 tux_helper.py gbsv-sig "TuX  tux   TUX"
+# Outputs: " :[k|Ω|X];u}"
+
+# Verify GBSV signature
+python3 tux_helper.py gbsv-verify "TuX  tux   TUX :[k|Ω|X];u}"
+
 # Generate valid 88-byte companion container
-python3 tux_helper.py companion examples/127928.tux
+python3 tux_helper.py companion examples/141248.tux
 ```
 
 ---
 
 ## 11. Command-Line Interface
 
+In TuxPL 2.0.0, legacy execution modes (`--CLASSIC`, `--STRICT`, `--UNIFIED-VM`, `--ADVERSARIAL`) have been completely superseded. Adversarial execution across the flat torus under GBSV verification is the sole, monolithic default.
+
 ```text
-Usage: tuxpl [MODE] [OPTIONS] <source_file>
+Usage: tuxpl [OPTIONS] <source_file.tux>
 
-Execution Modes (Mutually Exclusive):
-  --CLASSIC              Classic stack-based execution (Free syntax)
-  --STRICT               Structural constraint enforcement (Default)
-  --UNIFIED-VM           Unified 64K cellular memory with affine checking
-  --ADVERSARIAL          Dual-context adversarial scheduling with .tu companion
-
-Engine Options:
-  --gbsv                 Enable Galois-Base64 Syndrome Verification
-  --REVERSIBLE           Enable thermodynamic reversible frame buffer
-  --disasm               Dump disassembled cellular state before execution
-  --help                 Display this academic specification summary
-  --version              Display runtime release version
+Runtime Options:
+  --no-shadow, --deterministic   Execute in single-context mode without shadow adversary
+                                 (allows running code without companion .tu container)
+  --reversible, --REVERSIBLE     Enable thermodynamic history ring buffer (enables OP_UNDO)
+  --disasm                       Disassemble torus memory prior to execution
+  --trace-state                  Emit step-by-step trace of quantum scheduler state
+  --help                         Display technical reference and command options
+  --version                      Display build version and kernel architectural summary
 ```
 
 ---
 
 ## 12. Conclusion & Academic Significance
 
-TuxPL 2.0.0 demonstrates that esoteric programming environments can transcend arbitrary syntactical annoyance to establish rigorous mathematical testbeds for computer science research. By unifying finite-field control-flow integrity, modular residue number systems, topological graph routing, and non-preemptive adversarial concurrency, TuxPL establishes an execution domain where correctness is provable, complexity is mathematically bounded, and unauthorized state perturbation is cryptographically impossible.
+TuxPL 2.0.0 demonstrates that esoteric programming languages can serve as rigorous mathematical proving grounds for research in computer security, formal verification, and fault tolerance. By unifying Galois field theory, Chinese Remainder Theorem modular representations, topological routing over De Bruijn graphs, a flat cryptographic torus $\mathbb{Z}_M$, and deterministic adversarial concurrency, TuxPL establishes an execution standard where correctness is provable, and unauthorized state mutation is cryptographically impossible.

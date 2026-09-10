@@ -146,32 +146,6 @@ static void check_sep(int nU, const char *s, size_t n, size_t *i) {
     *i = j + (nU >= 4 ? 1 : (size_t)nU);
 }
 
-static void parse_line(const char *s, size_t n, Program *prog) {
-    if (n < 2 || s[0] != '{' || s[1] != ':') troll_die(TR_OPEN);
-    size_t i = 2;
-    if (i >= n || s[i] != ' ') troll_die(TR_SPACE1);
-    i++;
-    if (i < n && s[i] == ';') troll_die(TR_EMPTYLINE);
-
-    int count = 0;
-    for (;;) {
-        Word w = parse_word(s, n, &i);
-        prog_push(prog, w.op, w.arg, w.nU);
-        count++;
-        if (count > 5) troll_die(TR_SIX);
-
-        if (i >= n) troll_die(TR_END);
-        if (s[i] == ';') {
-            if (i + 1 != n) troll_die(TR_END);
-            return;
-        }
-
-        check_sep(w.nU, s, n, &i);
-        if (i >= n) troll_die(TR_END);
-        if (s[i] == ';') troll_die(TR_END);
-    }
-}
-
 static void validate_jumps(const Program *prog) {
     for (size_t c = 0; c < prog->len; c++) {
         Opcode op = prog->cmds[c].op;
@@ -180,44 +154,6 @@ static void validate_jumps(const Program *prog) {
             if (t < 0 || (uint64_t)t > prog->len) troll_die(TR_BADJUMP);
         }
     }
-}
-
-char calc_tux_checksum(const char *line, size_t len) {
-    (void)line;
-    uint64_t bit_len = (uint64_t)len * 8;
-    uint64_t p2 = 1, t2 = bit_len;
-    while (t2 > 0 && t2 % 2 == 0) { p2 *= 2; t2 /= 2; }
-    uint64_t p3 = 1, t3 = bit_len;
-    while (t3 > 0 && t3 % 3 == 0) { p3 *= 3; t3 /= 3; }
-    if (p3 > p2) return 'X';
-    if (p2 > p3) return 'U';
-    return 'T';
-}
-
-void parse_source(const char *src, Program *prog) {
-    prog->cmds = NULL;
-    prog->len = 0;
-    prog->cap = 0;
-    prog->is_purgatory = 0;
-    prog->is_apocalypse = 0;
-    prog->has_companion = 0;
-    prog->companion_name[0] = '\0';
-    if (*src == '\0') troll_die(TR_EMPTYFILE);
-
-    prog->fp.source_hash = tux_source_hash(src, strlen(src));
-    prog->fp.bit_len = strlen(src) * 8;
-    prog->fp.tux_checksum = 'T';
-
-    const char *p = src;
-    while (*p) {
-        const char *eol = strchr(p, '\n');
-        size_t llen = eol ? (size_t)(eol - p) : strlen(p);
-        while (llen > 0 && p[llen - 1] == '\r') llen--;
-        parse_line(p, llen, prog);
-        p = eol ? eol + 1 : p + llen;
-    }
-    if (prog->len == 0) troll_die(TR_EMPTYFILE);
-    validate_jumps(prog);
 }
 
 static const char *op_to_tux_lib(Opcode op) {
@@ -268,14 +204,10 @@ static const char *op_to_tux_lib(Opcode op) {
     }
 }
 
-void parse_source_cursed(const char *src, Program *prog) {
-    int gbsv_flag = prog ? prog->is_gbsv : 0;
+void parse_source(const char *src, Program *prog) {
     prog->cmds = NULL;
     prog->len = 0;
     prog->cap = 0;
-    prog->is_purgatory = 0;
-    prog->is_apocalypse = 0;
-    prog->is_gbsv = gbsv_flag;
     prog->has_companion = 0;
     prog->companion_name[0] = '\0';
     if (*src == '\0') troll_die(TR_EMPTYFILE);
@@ -286,6 +218,7 @@ void parse_source_cursed(const char *src, Program *prog) {
 
     static char licensed[512][64];
     int num_licensed = 0;
+    int is_purgatory = 0;
 
     enum { CS_IMPORTS, CS_HEADER, CS_BODY, CS_END } state = CS_IMPORTS;
     int line_idx = 1;
@@ -347,11 +280,8 @@ void parse_source_cursed(const char *src, Program *prog) {
                     licensed[num_licensed][63] = '\0';
                     num_licensed++;
                 }
-                if (strcmp(lib_name, "TuuuuuuuuX") == 0) {
-                    prog->is_purgatory = 1;
-                } else if (strcmp(lib_name, "TuuuuuuuuuX") == 0) {
-                    prog->is_purgatory = 1;
-                    prog->is_apocalypse = 1;
+                if (strcmp(lib_name, "TuuuuuuuuX") == 0 || strcmp(lib_name, "TuuuuuuuuuX") == 0) {
+                    is_purgatory = 1;
                 }
                 p = eol ? eol + 1 : p + llen;
                 continue;
@@ -388,8 +318,7 @@ void parse_source_cursed(const char *src, Program *prog) {
                 continue;
             }
 
-            /* Body line format: {:[~'Tux'~] (cmd1)  (cmd2) ... :C;!?} */
-            if (prog->is_purgatory) {
+            if (is_purgatory) {
                 size_t ws_count = 0;
                 for (size_t wi = 0; wi < llen; wi++) {
                     if (p[wi] == ' ' || p[wi] == '\t') ws_count++;
@@ -431,44 +360,20 @@ void parse_source_cursed(const char *src, Program *prog) {
                 if (count < target_count) {
                     check_sep(w.nU, p, llen, &i);
                 } else {
-                    /* Must have exactly one space before :C;!?} */
+                    /* Must have exactly one space before terminator */
                     if (i >= llen || p[i] != ' ') troll_die(TR_CURSED_SYNTAX);
                     i++;
 
-                    if (prog->is_gbsv) {
-                        gbsv_verify_line_or_die(p, llen, prev_line, prev_len);
-                        i += 11;
-                        if (prog->is_purgatory) {
-                            while (i < llen && (p[i] == ' ' || p[i] == '\t')) i++;
-                        }
-                        if (i != llen) {
-                            troll_die(TR_GBSV_SYNTAX);
-                        }
-                        break;
-                    } else {
-                        /* i is at ':' of :C;!?} */
-                        size_t prefix_len = i;
-                        char expected_c = calc_tux_checksum(p, prefix_len);
-                        prog->fp.tux_checksum = expected_c;
-
-                        if (i >= llen || p[i] != ':') troll_die(TR_CURSED_SYNTAX);
-                        i++;
-                        if (i >= llen) troll_die(TR_CURSED_SYNTAX);
-                        char actual_c = p[i];
-                        if (actual_c != expected_c) troll_die(TR_CURSED_CHECKSUM);
-                        i++;
-                        if (i + 4 > llen || strncmp(p + i, ";!?}", 4) != 0) {
-                            troll_die(TR_CURSED_SYNTAX);
-                        }
-                        i += 4;
-                        if (prog->is_purgatory) {
-                            while (i < llen && (p[i] == ' ' || p[i] == '\t')) i++;
-                        }
-                        if (i != llen) {
-                            troll_die(TR_CURSED_SYNTAX);
-                        }
-                        break;
+                    /* Mandatory GBSV verification on every instruction line */
+                    gbsv_verify_line_or_die(p, llen, prev_line, prev_len);
+                    i += 11;
+                    if (is_purgatory) {
+                        while (i < llen && (p[i] == ' ' || p[i] == '\t')) i++;
                     }
+                    if (i != llen) {
+                        troll_die(TR_GBSV_SYNTAX);
+                    }
+                    break;
                 }
             }
 

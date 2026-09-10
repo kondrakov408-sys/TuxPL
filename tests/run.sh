@@ -2,7 +2,10 @@
 set -e
 cd "$(dirname "$0")/.."
 
-export TUX_MATH_KEY=auto
+echo "=== Rule 1: Running GBSV Galois/Rijndael Cross-Test (Python vs C) ==="
+python3 tests/test_py_gbsv_cross.py
+
+echo "=== Running TuxPL 2.0.0 Monolithic Core Basic Test Suite ==="
 
 pass=0
 fail=0
@@ -13,35 +16,54 @@ check() {
     got=$("$@" 2>/dev/null)
     if [ "$got" = "$expected" ]; then
         pass=$((pass + 1))
+        echo "  [PASS] $name"
     else
         fail=$((fail + 1))
-        echo "FAIL $name: got [$got] want [$expected]"
+        echo "  [FAIL] $name: got [$got] want [$expected]"
     fi
 }
 
 expect_troll() {
     name=$1 file=$2
-    if ./tuxpl --PLS "$file" >/dev/null 2>&1; then
+    if ./tuxpl --no-shadow "$file" >/dev/null 2>&1; then
         fail=$((fail + 1))
-        echo "FAIL $name: ждали троллинг, программа прошла"
+        echo "  [FAIL] $name: ждали троллинг, программа прошла"
     else
         pass=$((pass + 1))
+        echo "  [PASS] $name (успешный троллинг)"
     fi
 }
 
-# Тест: запуск классического файла без --PLS должен отвергаться (режим по умолчанию — Cursed)
+# 1. Тест: запуск классического файла без заголовков/GBSV должен отвергаться
 if ./tuxpl examples/hi.tux >/dev/null 2>&1; then
     fail=$((fail + 1))
-    echo "FAIL cursed_default: ждали отказ без --PLS"
+    echo "  [FAIL] legacy_rejection: ждали отказ на классическом файле"
 else
     pass=$((pass + 1))
+    echo "  [PASS] legacy_rejection (классический формат отвергнут)"
 fi
 
-check hi "Hi" ./tuxpl --PLS examples/hi.tux
-check loop "54321" ./tuxpl --PLS examples/loop.tux
-check sum "7" sh -c 'echo "3 4" | ./tuxpl --PLS examples/sum.tux'
+# 2. Позитивные тесты исполнения
+check hi_zero_flag "Hi" ./tuxpl examples/2088.tux
+check hi_no_shadow "Hi" ./tuxpl --no-shadow examples/2088.tux
 
-T=$(mktemp -d)
+# 3. Синтаксические и структурные проверки отказов
+T=$(mktemp -d -p "$(pwd)")
+cleanup() {
+    rm -rf "$T"
+}
+trap cleanup EXIT INT TERM
+
+# Тест сироты: без .tu файла рантайм паникует PANIC_COMPANION_ORPHAN
+cp examples/2088.tux "$T/2088.tux"
+if ./tuxpl "$T/2088.tux" >/dev/null 2>&1; then
+    fail=$((fail + 1))
+    echo "  [FAIL] orphan_check: ждали PANIC_COMPANION_ORPHAN"
+else
+    pass=$((pass + 1))
+    echo "  [PASS] orphan_check (сирота отвергнута без companion)"
+fi
+
 printf '{: TuX TuX TuX TuX TuX TuX;\n' > "$T/six.tux"
 printf '{: tux  tux;\n' > "$T/sep.tux"
 printf '{: tux\n' > "$T/nosemi.tux"
@@ -66,6 +88,6 @@ expect_troll underflow "$T/underflow.tux"
 expect_troll divzero "$T/divzero.tux"
 expect_troll badjump "$T/badjump.tux"
 
-rm -rf "$T"
-echo "OK: $pass, FAIL: $fail"
+echo "======================================================="
+echo "Basic Tests: OK: $pass, FAIL: $fail"
 [ "$fail" -eq 0 ]

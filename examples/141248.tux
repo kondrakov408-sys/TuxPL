@@ -1,0 +1,344 @@
+<~"TUX"/['TUux']~>!
+<~"TUX"/['TuUX']~>!
+<~"TUX"/['TuuX']~>!
+<~"TUX"/['TuuuX']~>!
+<~"TUX"/['TuuuuX']~>!
+<~"TUX"/['TuuuuuuuuuX']~>!
+<~"TUX"/['tUX']~>!
+<~"TUX"/['tUx']~>!
+<~"TUX"/['tuux']~>!
+~"TUX"('tux')/[TUX](){:
+{:[~'Tux'~] (tuuUUuuUuux) :[j|0|U];!} 
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux) :[6|}|X];&} 
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux) :[3|.|U];&} 
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux) :[a|<|U];&} 
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUuuUuux) :[G|Z|X];&} 
+{:[~'Tux'~] (tuuUUuuUuux) :[j|0|U];!}
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux) :[6|}|X];&}
+{:[~'Tux'~] (tuuUUuuUuux)	(tuuUUuuUuux)	(tuuUUUuUuUx) :[W|f|U];~}
+{:[~'Tux'~] (tuuUUUuUuUx)	(tuuUUUuUuUx)	(tuuUUUuUuUx)	(TuuUuuuuuuuuuuX) :[t|!|U];%}
+{:[~'Tux'~] (TuuUUuuUuuX)	(TUux)  (TuuUuuuuuuuuuUX)	(TuuUuUuUuX)	(TUux) :[I|5|U];!} 
+{:[~'Tux'~] (TuuUuuuuuuuuuuX) :[M|r|U];%} 
+{:[~'Tux'~] (TuUX)  (TuuUuuuuuuuuuUX) :[u|>|U];~}
+{:[~'Tux'~] (TuUX)  (tuuUUuuUuUx)	(TUuuux) :[G|Z|U];?}
+{:[~'Tux'~] (TuuUuUuX)	(tUX) (TuuUUUUuUX)	(tUX) :[a|J|T];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUuUuX) :[p|O|T];&}
+{:[~'Tux'~] (tUX) (TuuUuuuuuX)	(tUX) (TuuUuuuuuX)	(tUX) :[h|V|T];&}
+{:[~'Tux'~] (TuuUuUUuUUX) :[Q|!|U];&} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX) :[a|1|T];~} 
+{:[~'Tux'~] (tUX) (TuuUuuuuUUX)	(tUX) :[e|{|U];&} 
+{:[~'Tux'~] (TuuUuuUUUUX)	(tUX) (TuuUuuUUUuX)	(tUX) :[/|@|U];%} 
+{:[~'Tux'~] (TuuUuUuUuuX)	(tUX) (TuuUuUuuUuX)	(tUX) (TuuUuuUUUUX) :[t|d|U];&} 
+{:[~'Tux'~] (tUX) :[r|%|X];~}
+{:[~'Tux'~] (TuuUuuUUuuX)	(tUX) :[+|<|U];%}
+{:[~'Tux'~] (TuuUuUUuUX)	(tUX) (TuuUuuuUUuX) :[6|U|T];~}
+{:[~'Tux'~] (tUX) (TuuUuuUUuuX)	(tUX) (TuuUuuUUUUX) :[6|s|X];!}
+{:[~'Tux'~] (tUX) (TuuUuUuUUUX)	(tUX) (TuuUuuuuuX)	(tUX) :[0|.|X];?}
+{:[~'Tux'~] (TuuUuuUuuUX) :[0|'|U];!} 
+{:[~'Tux'~] (tUX) (TuuUuuUUUuX) :[n|\|T];&} 
+{:[~'Tux'~] (tUX) (TuuUuUuUuuX)	(tUX) :[b|.|U];%} 
+{:[~'Tux'~] (TuuUuuuUuUX)	(tUX) (TuuUuuuUUUX)	(tUX) :[h|~|U];!} 
+{:[~'Tux'~] (TuuUuUuuUuX)	(tUX) (TuuUuuUuuUX)	(tUX) (TuuUuUuUuuX) :[D|3|U];?} 
+{:[~'Tux'~] (tUX) :[r|%|X];&}
+{:[~'Tux'~] (TuuUuUUuuUX)	(tUX) :[1|r|U];~}
+{:[~'Tux'~] (TuuUuuuuuX)	(tUX) (TuuUuuUUuX) :[n|/|X];!}
+{:[~'Tux'~] (tUX) (TuuUuuuuuX)	(tUX) (TuuUuuuuuUX) :[c|1|X];%}
+{:[~'Tux'~] (tUX) (TuuUuuuUuuX)	(tUX) (TuuUuUuUUuX)	(tUX) :[N|_|X];%}
+{:[~'Tux'~] (TuuUuuuUuUX) :[D|e|U];!} 
+{:[~'Tux'~] (tUX) (TuuUuUuuUuX) :[k|||U];~} 
+{:[~'Tux'~] (tUX) (TuuUuUuuUUX)	(tUX) :[h|@|T];?} 
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) (TuuUuUuuUuX)	(tUX) :[x|5|U];&} 
+{:[~'Tux'~] (TuuUuuUuuUX)	(tUX) (TuuUuuuuuUX)	(tUX) (TuuUuuUUuuX) :[j|^|U];%} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUuuuuuX)	(tUX) :[8|@|T];!}
+{:[~'Tux'~] (TuuUuUuuUuX)	(tUX) (TuuUuUuUuUX) :[9|H|T];~}
+{:[~'Tux'~] (tUX) (TuuUuuUUUuX)	(tUX) (TuuUuUuUuuX) :[g|7|U];~}
+{:[~'Tux'~] (tUX) (TuuUuuUuuUX)	(tUX) (TuuUuuUUuUX)	(tUX) :[d|.|T];?}
+{:[~'Tux'~] (TuuUuuuUuUX) :[D|e|U];?} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX) :[a|1|T];~} 
+{:[~'Tux'~] (tUX) (TuuUuUUUuUX)	(tUX) :[F|h|U];?} 
+{:[~'Tux'~] (TuuUuUuX)	(tUX) (TuuUUUUuUX)	(tUX) :[a|J|T];?} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUuUuX) :[p|O|T];&}
+{:[~'Tux'~] (tUX) (TuuUuuuuUUX)	(tUX) (TuuUuuUUUUX)	(tUX) :[M|L|T];?}
+{:[~'Tux'~] (TuuUuUuuUuX) :[y|D|U];!} 
+{:[~'Tux'~] (tUX) (TuuUuuuUuUX) :[S|-|T];~} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX)	(tUX) :[M|K|U];!} 
+{:[~'Tux'~] (TuuUuUuuUUX)	(tUX) (TuuUuUuUuuX)	(tUX) :[J|l|U];%} 
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) (TuuUuUuUuuX)	(tUX) (TuuUuUuUuUX) :[f|H|T];!} 
+{:[~'Tux'~] (tUX) :[r|%|X];&}
+{:[~'Tux'~] (TuuUuUuuUUX)	(tUX) :[4|8|U];~}
+{:[~'Tux'~] (TuuUUUuUuX)	(tUX) (TuuUuuuuuX) :[7|(|T];%}
+{:[~'Tux'~] (tUX) (TuuUuuUUUUX)	(tUX) (TuuUuUuuuuX) :[g|\|U];!}
+{:[~'Tux'~] (tUX) (TuuUuuuUuUX)	(tUX) (TuuUuUuuUuX)	(tUX) :[N|8|X];%}
+{:[~'Tux'~] (TuuUuuuuuUX) :[f|(|T];&} 
+{:[~'Tux'~] (tUX) (TuuUuUuUuuX) :[M|%|T];?} 
+{:[~'Tux'~] (tUX) (TuuUuuUuuUX)	(tUX) :[q|k|U];&} 
+{:[~'Tux'~] (TuuUuuUUUUX)	(tUX) (TuuUuuUUUuX)	(tUX) :[/|@|U];?} 
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) (TuuUuuUUuuX)	(tUX) (TuuUuUuX) :[o|R|T];&} 
+{:[~'Tux'~] (tUX) :[r|%|X];?}
+{:[~'Tux'~] (TuuUuuuUuUX)	(tUX) :[+|i|U];%}
+{:[~'Tux'~] (TuuUuuUUUuX)	(tUX) (TuuUuUuUuuX) :[W|9|T];~}
+{:[~'Tux'~] (tUX) (TuuUuUuuUuX)	(tUX) (TuuUuuUUUUX) :[J|p|T];?}
+{:[~'Tux'~] (tUX) (TuuUuUuuuuX)	(tUX) (TuuUuUUuuUX)	(tUX) :[n|!|X];&}
+{:[~'Tux'~] (TuuUuuuuuX) :[L|,|T];!} 
+{:[~'Tux'~] (tUX) (TuuUuuuUUuX) :[M|w|U];%} 
+{:[~'Tux'~] (tUX) (TuuUuuUUuuX)	(tUX) :[n|R|U];~} 
+{:[~'Tux'~] (TuuUuUuUuUX)	(tUX) (TuuUuUUuuuX)	(tUX) :[b|a|U];!} 
+{:[~'Tux'~] (TuuUUUuUuX)	(tUX) (TuuUuuuuuX)	(tUX) (TuuUUuuUuX) :[N|e|T];%} 
+{:[~'Tux'~] (tUX) :[r|%|X];~}
+{:[~'Tux'~] (TuuUUUuuUX)	(tUX) :[g|r|U];&}
+{:[~'Tux'~] (TuuUUuuUuX)	(tUX) (TuuUUuUuuX) :[S|]|T];~}
+{:[~'Tux'~] (tUX) (TuuUUUuuUX)	(tUX) (TuuUUuuUuX) :[G|]|U];!}
+{:[~'Tux'~] (tUX) (TuuUUuUUuX)	(tUX) (TuuUUuUUUX)	(tUX) :[X|\|U];?}
+{:[~'Tux'~] (TuuUUuuuUX) :[Z|E|T];&} 
+{:[~'Tux'~] (tUX) (TuuUUuuuuX) :[2|[|U];%} 
+{:[~'Tux'~] (tUX) (TuuUUuuuUX)	(tUX) :[i|0|U];?} 
+{:[~'Tux'~] (TuuUUUuuUX)	(tUX) (TuuUUUuuuX)	(tUX) :[8|9|T];~} 
+{:[~'Tux'~] (TuuUUuUuuX)	(tUX) (TuuUUuUUuX)	(tUX) (TuuUUUuuuX) :[O|>|X];!} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUuuUUX)	(tUX) :[q|:|U];&}
+{:[~'Tux'~] (TuuUuUuX)	(tUX) (TuuUuUuuuUX) :[W|b|U];~}
+{:[~'Tux'~] (tUX) (TuuUuUuUuUX)	(tUX) (TuuUuuuuuUX) :[d|Y|U];%}
+{:[~'Tux'~] (tUX) (TuuUuuUUUuX)	(tUX) (TuuUuUuUuuX)	(tUX) :[m|9|T];~}
+{:[~'Tux'~] (TuuUuUuUuUX) :[Y|F|U];~} 
+{:[~'Tux'~] (tUX) (TuuUuuUUuUX) :[k|J|U];~} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX)	(tUX) :[M|K|U];?} 
+{:[~'Tux'~] (TuuUuUuuUUX)	(tUX) (TuuUuUuUuuX)	(tUX) :[J|l|U];%} 
+{:[~'Tux'~] (TuuUuuuUuUX)	(tUX) (TuuUuUuuuuX)	(tUX) (TuuUUUuUuX) :[5|F|X];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];&}
+{:[~'Tux'~] (TuuUuuuuuX)	(tUX) :[8|@|T];!}
+{:[~'Tux'~] (TuuUUuuUUX)	(tUX) (TuuUUUuuUX) :[f|B|X];?}
+{:[~'Tux'~] (tUX) (TuuUUuUUuX)	(tUX) (TuuUuUuX) :[1|w|X];&}
+{:[~'Tux'~] (tUX) (TuuUuuuUuUX)	(tUX) (TuuUuuUUUuX)	(tUX) :[u|w|T];?}
+{:[~'Tux'~] (TuuUuuuUuUX) :[D|e|U];&} 
+{:[~'Tux'~] (tUX) (TuuUuUuuUuX) :[k|||U];~} 
+{:[~'Tux'~] (tUX) (TuuUuuuUUUX)	(tUX) :[J|3|T];%} 
+{:[~'Tux'~] (TuuUuUUuuUX)	(tUX) (TuuUuuuuuX)	(tUX) :[0|m|X];?} 
+{:[~'Tux'~] (TuuUuuuuUuX)	(tUX) (TuuUuUuUuUX)	(tUX) (TuuUuuuUuuX) :[x|@|U];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUuuuUUUX)	(tUX) :[M|x|U];~}
+{:[~'Tux'~] (TuuUuuuUuUX)	(tUX) (TuuUuUuUuuX) :[t|[|T];!}
+{:[~'Tux'~] (tUX) (TuuUUUuUuX)	(tUX) (TuuUuuuuuX) :[a|e|U];~}
+{:[~'Tux'~] (tUX) (TuuUUUuuuX)	(tUX) (TuuUUuuuuX)	(tUX) :[f|;|U];~}
+{:[~'Tux'~] (TuuUUuuuuX) :[L|d|X];&} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX) :[a|1|T];?} 
+{:[~'Tux'~] (tUX) (TuuUuUuUuUX)	(tUX) :[J|%|U];!} 
+{:[~'Tux'~] (TuuUuuUUUuX)	(tUX) (TuuUuuUuuUX)	(tUX) :[D|{|U];?} 
+{:[~'Tux'~] (TuuUuUuUuuX)	(tUX) (TuuUuUuuUUX)	(tUX) (TuuUuuuuuX) :[X|d|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUuUUuUUX)	(tUX) :[8|s|U];?}
+{:[~'Tux'~] (TuuUuUuuUUX)	(tUX) (TuuUuUuUuuX) :[C|$|T];!}
+{:[~'Tux'~] (tUX) (TuuUuuuuuUX)	(tUX) (TuuUuuuuUuX) :[k|$|T];&}
+{:[~'Tux'~] (tUX) (TuuUuuUUuuX)	(tUX) (TuuUuuuUuUX)	(tUX) :[b|r|X];?}
+{:[~'Tux'~] (TuuUuUUUuUX) :[N|E|U];~} 
+{:[~'Tux'~] (tUX) (TuuUuUuX) :[W|m|U];%} 
+{:[~'Tux'~] (tUX) (TuuUuUuUuuX)	(tUX) :[b|.|U];?} 
+{:[~'Tux'~] (TuuUuuuUuUX)	(tUX) (TuuUuuUUuUX)	(tUX) :[5|t|U];!} 
+{:[~'Tux'~] (TuuUuUuuuuX)	(tUX) (TuuUuuUUUUX)	(tUX) (TuuUuUuuUuX) :[m|l|U];%} 
+{:[~'Tux'~] (tUX) :[r|%|X];%}
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) :[8|,|U];&}
+{:[~'Tux'~] (TuuUuuUUuuX)	(tUX) (TuuUuuuuuX) :[o|6|X];&}
+{:[~'Tux'~] (tUX) (TuuUuuuUuuX)	(tUX) (TuuUuuuUuUX) :[q|1|X];!}
+{:[~'Tux'~] (tUX) (TuuUuuuuUuX)	(tUX) (TuuUuUuUuuX)	(tUX) :[f|b|T];&}
+{:[~'Tux'~] (TuuUUUuUuX) :[Z|>|T];~} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuX) :[a|1|T];%} 
+{:[~'Tux'~] (tUX) (TuuUUuuuuX)	(tUX) :[n|A|U];?} 
+{:[~'Tux'~] (TuuUuuuuuX)	(tUX) (TuuUuUUuUUX)	(tUX) :[r|P|T];?} 
+{:[~'Tux'~] (TuuUuUuuuuX)	(tUX) (TuuUuuuuuUX)	(tUX) (TuuUuuUuuUX) :[9|3|U];?} 
+{:[~'Tux'~] (tUX) :[r|%|X];?}
+{:[~'Tux'~] (TuuUuuuUuuX)	(tUX) :[5|w|U];&}
+{:[~'Tux'~] (TuuUuUUUuUX)	(tUX) (TuuUuUuX) :[T|"|T];%}
+{:[~'Tux'~] (tUX) (TuuUuuuuuUX)	(tUX) (TuuUuuuUuuX) :[w|`|U];~}
+{:[~'Tux'~] (tUX) (TuuUuUuUUuX)	(tUX) (TuuUuuuUuUX)	(tUX) :[4|)|T];!}
+{:[~'Tux'~] (TuuUuUuuUuX) :[y|D|U];%} 
+{:[~'Tux'~] (tUX) (TuuUuUuuUUX) :[z|;|U];%} 
+{:[~'Tux'~] (tUX) (TuuUuuuuuUX)	(tUX) :[b|*|T];~} 
+{:[~'Tux'~] (TuuUuUuuUuX)	(tUX) (TuuUuuUuuUX)	(tUX) :[K|"|U];!} 
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) (TuuUuuUUuuX)	(tUX) (TuuUuuuuuX) :[G|~|X];?} 
+{:[~'Tux'~] (tUX) :[r|%|X];~}
+{:[~'Tux'~] (TuuUuuuuUUX)	(tUX) :[m|9|U];%}
+{:[~'Tux'~] (TuuUuuUUUUX)	(tUX) (TuuUuuUUUuX) :[j|4|X];!}
+{:[~'Tux'~] (tUX) (TuuUuuuuUUX)	(tUX) (TuuUuUuUuUX) :[4|}|X];%}
+{:[~'Tux'~] (tUX) (TuuUuUuuUuX)	(tUX) (TuuUuUuuUuX)	(tUX) :[x|)|T];!}
+{:[~'Tux'~] (TuuUuuuUuUX) :[D|e|U];~} 
+{:[~'Tux'~] (tUX) (TuuUuuUUUuX) :[n|\|T];?} 
+{:[~'Tux'~] (tUX) (TuuUuuuuUUX)	(tUX) :[e|{|U];%} 
+{:[~'Tux'~] (TuuUuUUuuUX)	(tUX) (TuuUUUuUuX)	(tUX) :[z|M|T];&} 
+{:[~'Tux'~] (TuuUuuuuuX)	(tUX) (TuuUuUuuUUX)	(tUX) (TuuUuUuUuuX) :[X|{|U];%} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUuuuuuUX)	(tUX) :[8|,|U];&}
+{:[~'Tux'~] (TuuUuuuuUuX)	(tUX) (TuuUuuUuuUX) :[+|u|X];?}
+{:[~'Tux'~] (tUX) (TuuUuuUUuuX)	(tUX) (TuuUuuUuuUX) :[1|m|T];~}
+{:[~'Tux'~] (tUX) (TuuUuUUuUuX)	(tUX) (TuuUuuuUuUX)	(tUX) :[s|R|T];!}
+{:[~'Tux'~] (TuuUuuuUuuX) :[B|{|T];&} 
+{:[~'Tux'~] (tUX) (TuuUuUuX) :[W|m|U];&} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];~} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[R|~|X];~}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[2|$|U];%}
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[A|*|X];!}
+{:[~'Tux'~] (TuuUUUUuUX) :[H|G|T];!} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX) :[n|.|U];~} 
+{:[~'Tux'~] (tUX) (TuuUUUUuUX)	(tUX) :[S|P|X];!} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) :[e|,|U];&} 
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUUUUuUX)	(tUX) (TuuUUUUuUX) :[z|8|T];~} 
+{:[~'Tux'~] (tUX) :[r|%|X];!}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) :[7|S|U];%}
+{:[~'Tux'~] (TuuUUUUuUX)	(tUX) (TuuUuUuX) :[+|*|X];!}
+{:[~'Tux'~] (tUX) (TuuUUUUUUUUUX)	(tUx) (TuuUUUUUUUUUX) :[y|||U];&}
+{:[~'Tux'~] (tUx) (TuuUUUUUUUUUX)	(tUx) (TuuUUUUUUUUUX)	(tUx) :[O|O|U];~}
+{:[~'Tux'~] (TuuUUUUX) :[u|;|X];!} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];%} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) :[g|t|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX)  (tUx) (TuuX) :[1|9|X];~} 
+{:[~'Tux'~] (tUx) :[c|0|T];&}
+{:[~'Tux'~] (TuuX)  (tUx) :[a|R|T];?} 
+{:[~'Tux'~] (TuuX)  (tUx) (TuuX) :[r|,|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX) :[p|(|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) (TuuX)  (tUx) :[8|L|T];&}
+{:[~'Tux'~] (TuuX) :[S|O|U];~} 
+{:[~'Tux'~] (tUx) (TuuX) :[I|"|X];~} 
+{:[~'Tux'~] (tUx) (TuuX)  (tUx) :[B|S|T];&}
+:}}//?!~;

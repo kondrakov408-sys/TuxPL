@@ -176,7 +176,10 @@ GbsvSignature gbsv_calculate(const uint8_t *P_curr, size_t N_curr,
 
 bool gbsv_parse_terminator(const char *raw_line, size_t len, 
                            size_t *out_prefix_len, GbsvSignature *out_sig) {
-    while (len > 0 && (raw_line[len - 1] == '\r' || raw_line[len - 1] == '\n')) {
+    while (len > 0 && (raw_line[len - 1] == '\r' || raw_line[len - 1] == '\n' || raw_line[len - 1] == ' ' || raw_line[len - 1] == '\t')) {
+        if (raw_line[len - 1] == '}') {
+            break;
+        }
         len--;
     }
 

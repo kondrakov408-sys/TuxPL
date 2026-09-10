@@ -8,7 +8,9 @@
 
 #define TUXPL_VERSION "2.0.0"
 
-#define TUX_MEM_SIZE         65536
+#define UNIFIED_MEM_SIZE     65536
+#define TUX_MEM_SIZE         UNIFIED_MEM_SIZE
+#define TUX_ZM_M             7436429U
 #define TUX_HISTORY_DEPTH    32
 #define TUX_MAX_ACTIVE_CODE  16384
 #define TUX_NUM_OPCODES      42
@@ -35,46 +37,24 @@ typedef enum {
     OP_PAY_TIME, OP_NOP
 } Opcode;
 
-/* Семантические теги типов */
+/* Семантические теги типов (инвариант Type(W) = (W ^ 0x5A) % 6) */
 enum {
-    TUX_TYPE_I8     = 0,
-    TUX_TYPE_I16    = 1,
-    TUX_TYPE_I32    = 2,
-    TUX_TYPE_I64    = 3,
-    TUX_TYPE_TRIT   = 4,
-    TUX_TYPE_ADDR   = 5,
-    TUX_TYPE_OPCODE = 6
+    TUX_TYPE_ADDR   = 0,
+    TUX_TYPE_I8     = 1,
+    TUX_TYPE_I16    = 2,
+    TUX_TYPE_I32    = 3,
+    TUX_TYPE_I64    = 4,
+    TUX_TYPE_OPCODE = 5,
+    TUX_TYPE_TRIT   = 6
 };
 
-/* Возрастные категории */
+/* Возрастные категории (инвариант Age(W) = nu_3(W) % 4) */
 enum {
     TUX_AGE_YOUNG = 0,
     TUX_AGE_ADULT = 1,
     TUX_AGE_OLD   = 2,
     TUX_AGE_DEAD  = 3
 };
-
-/* Битовые флаги TuxCell */
-#define TUX_FLAG_DORMANT     0x01
-#define TUX_FLAG_MUTATED     0x02
-#define TUX_FLAG_CLONED      0x04
-#define TUX_FLAG_EXECUTABLE  0x08
-#define TUX_FLAG_IMMUTABLE   0x10
-#define TUX_FLAG_CORRUPTED   0x20
-#define TUX_FLAG_RESERVED_1  0x40
-#define TUX_FLAG_RESERVED_2  0x80
-
-/* Ячейка памяти Unified Memory */
-typedef struct {
-    int64_t  val;          /* Каноническое хранилище данных */
-    uint16_t raw_code;     /* 16-битный state payload */
-    uint8_t  type_tag;     /* Семантический тип */
-    uint8_t  age;          /* TUX_AGE_* */
-    uint8_t  gen;          /* Поколение 0..255 */
-    uint8_t  flags;        /* TUX_FLAG_* */
-    uint32_t lineage;      /* Детерминированный ID родословной */
-    uint32_t exec_count;   /* Счётчик исполнений (эволюционный, не откатывается) */
-} TuxCell;
 
 /* Паспорт программы */
 typedef struct {
@@ -137,7 +117,7 @@ typedef struct {
     int64_t  regs[4];
     uint8_t  reg_tags[4];
     uint16_t mem_addr;
-    int64_t  mem_val_before;
+    uint32_t mem_val_before;
     uint8_t  mem_tag_before;
     int64_t  stack_popped_val;
     uint8_t  stack_popped_tag;
@@ -164,9 +144,6 @@ typedef struct {
     Cmd *cmds;
     size_t len;
     size_t cap;
-    int is_purgatory;
-    int is_apocalypse;
-    int is_gbsv;
     char companion_name[64];
     int has_companion;
     ProgramFingerprint fp;
@@ -174,29 +151,50 @@ typedef struct {
 
 #include "diag.h"
 
-/* Режимы исполнения VM */
-typedef enum {
-    TUX_MODE_CLASSIC,
-    TUX_MODE_STRICT,
-    TUX_MODE_UNIFIED_VM,
-    TUX_MODE_ADVERSARIAL,
-    /* Совместимость со старыми алиасами */
-    TUX_MODE_CURSED = TUX_MODE_STRICT,
-    TUX_MODE_PURGATORY = TUX_MODE_UNIFIED_VM,
-    TUX_MODE_APOCALYPSE = TUX_MODE_ADVERSARIAL
-} TuxMode;
-
+/* Конфигурация виртуальной машины TuxPL 2.0.0 */
 typedef struct {
-    TuxMode mode;
-    int is_reversible;
-    int is_disasm;
-    int is_trace;
-    int is_trace_state;
-    int is_gbsv;
+    int is_no_shadow;      /* --no-shadow / --deterministic: отключение контекста TUX_B */
+    int is_reversible;     /* --reversible: запись снимков состояния для OP_UNDO */
+    int is_disasm;         /* --disasm: полиморфный анти-дизассемблер */
+    int is_trace;          /* --trace: пошаговый вывод регистров и инструкций */
+    int is_trace_state;    /* --trace-state: расширенный вывод генома и энтропии */
     const char *filepath;
     const char *companion_path;
 } TuxVMConfig;
 
+/* Структура виртуальной машины TuxPL (Flat ZM Core) */
+typedef struct TuxVM {
+    uint32_t        *unified_mem;  /* Плоский буфер UNIFIED_MEM_SIZE ячеек в кольце ZM */
+    TuxContext       ctxA;
+    TuxContext       ctxB;
+    TuxScheduler     sched;
+    TuxTimeDebt      time_debt;
+    TuxHistoryBuffer hist;
+    TuxGenome        genome;
+    TuxEntropy       entropy;
+    int              gas_budget;
+    uint64_t         step_counter;
+    TuxVMConfig      config;
+} TuxVM;
+
+/* Чистые инварианты модулярного тора ZM */
+static inline uint8_t tux_cell_age(uint32_t w) {
+    if (w == 0) return TUX_AGE_DEAD; /* 3: DEAD */
+    uint32_t tmp = w;
+    uint8_t nu3 = 0;
+    while (tmp > 0 && (tmp % 3 == 0)) {
+        nu3++;
+        tmp /= 3;
+    }
+    return (uint8_t)(nu3 % 4);
+}
+
+static inline uint8_t tux_cell_type(uint32_t w) {
+    return (uint8_t)((w ^ 0x5AU) % 6U);
+}
+
+uint32_t tux_sp_round(uint32_t val, uint16_t pc);
+int64_t  tux_crazy_alu(int64_t a, int64_t b);
 
 /* genome.c — детерминированная математика, хэширование и эволюция */
 uint64_t tux_crazy64(uint64_t a, uint64_t b);
@@ -208,11 +206,11 @@ void tux_genome_init(TuxGenome *gen, uint64_t program_key, const uint64_t *tu_ge
 void tux_genome_evolve(TuxGenome *gen, int64_t result, uint64_t entropy_pool, const int64_t regs[4], uint64_t pc);
 
 /* state.c — единая память Unified Memory, связанность регистров, история UNDO */
-void tux_mem_init(TuxCell *mem, uint64_t program_key, uint64_t genome0);
+void tux_mem_init(uint32_t *mem, uint64_t program_key, uint64_t genome0);
 uint16_t mutation_encode(int64_t val, uint64_t program_key, uint64_t genome0);
 void tux_register_coupling(int64_t regs[4]);
 void tux_history_push(TuxHistoryBuffer *hb, const TuxHistoryEntry *entry);
-int  tux_history_undo(TuxHistoryBuffer *hb, TuxContext *ctx, TuxCell *mem);
+int  tux_history_undo(TuxHistoryBuffer *hb, TuxContext *ctx, uint32_t *mem);
 
 /* decoder.c — динамический рантайм-декодер и ширина */
 typedef struct {
@@ -222,7 +220,7 @@ typedef struct {
 } DecodedInstruction;
 
 DecodedInstruction decode_instruction(
-    const TuxCell *cell,
+    uint32_t val,
     uint16_t pc,
     uint64_t program_key,
     const int64_t regs[4],
@@ -233,17 +231,16 @@ DecodedInstruction decode_instruction(
 );
 
 /* mutation.c — самомодификация, старение, клонирование, распад */
-void tux_mutate_cell(TuxCell *cell, int64_t result, uint64_t program_key, uint64_t genome0, uint64_t entropy_pool, uint16_t pc);
-void tux_clone_cell(TuxCell *mem, uint16_t src_addr, uint16_t dst_addr, const TuxGenome *genome, uint64_t mutation_state, size_t *active_code_count);
-void tux_check_dormant_resonance(TuxCell *mem, const TuxGenome *genome);
+void tux_mutate_cell(uint32_t *cell, int64_t result, uint64_t program_key, uint64_t genome0, uint64_t entropy_pool, uint16_t pc);
+void tux_clone_cell(uint32_t *mem, uint16_t src_addr, uint16_t dst_addr, const TuxGenome *genome, uint64_t mutation_state, size_t *active_code_count);
+void tux_check_dormant_resonance(uint32_t *mem, const TuxGenome *genome);
 
 /* scheduler.c — детерминированный планировщик многозадачности */
 void tux_scheduler_init(TuxScheduler *sched, uint64_t program_key);
-uint8_t tux_scheduler_step(TuxScheduler *sched, const TuxContext *active_ctx, const TuxCell *mem, const TuxGenome *genome, uint64_t entropy_pool, uint64_t step_counter);
+uint8_t tux_scheduler_step(TuxScheduler *sched, const TuxContext *active_ctx, const uint32_t *mem, const TuxGenome *genome, uint64_t entropy_pool, uint64_t step_counter);
 
 /* parse.c — парсинг и компиляция */
 void parse_source(const char *src, Program *prog);
-void parse_source_cursed(const char *src, Program *prog);
 char calc_tux_checksum(const char *line, size_t len);
 int  load_companion_file(const char *path, uint64_t expected_hash, uint64_t *out_genome, uint64_t *out_regs);
 
