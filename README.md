@@ -191,11 +191,11 @@ Format Breakdown:
    Evaluated in the Rijndael field $\mathbb{F}_{2^8} \cong \mathbb{Z}_2[x] / (x^8 + x^4 + x^3 + x + 1)$ (modular polynomial `0x11B`):
    $$S_0 = \text{seed}_{L-1}$$
    $$S_{j+1} = (S_j \bullet P[j]) \oplus P[j], \quad \text{where } \bullet \text{ denotes Galois field multiplication}$$
-   $$\mathrm{X} = \text{gf\_inv}(S_{|P|}) \oplus 0\text{xA5}$$
+   $$\mathrm{X} = \mathrm{inv}_{\mathrm{GF}}(S_{|P|}) \oplus 0\mathrm{xA5}$$
 
 3. **Hamming Metric Collapse ($Z$):**
    Measures bitwise divergence against the constant seed mask `~"TUX"` (`0xDF 0xAA 0xA7`):
-   $$Z = \left(\sum_{j=0}^{|P|-1} \text{popcount}(P[j] \oplus \text{TUX\_SEED}[j \bmod 3]) \cdot 13 + L\right) \pmod{64}$$
+   $$Z = \left(\sum_{j=0}^{|P|-1} \text{popcount}(P[j] \oplus K_{\mathrm{seed}}[j \bmod 3]) \cdot 13 + L\right) \pmod{64}$$
    $$Z = \text{Base64Table}[Z]$$
 
 A single bit flip in code or whitespace produces an immediate syndrome collapse, triggering `PANIC_GBSV_GF` or `PANIC_GBSV_B64` with POSIX exit code `1`.
@@ -237,10 +237,10 @@ Execution state maintains two independent registers:
 
 Dedicated vector instructions arbitrate PC state:
 - `OP_PUSH_PC` (`tuuUUuuUUuUx`): Pushes `PC_CODE` with tag `TUX_TYPE_ADDR`.
-- `OP_SET_PC` (`tuuUUuuUUuUX`): Pops address $A$ and branches: $\text{PC\_CODE} \leftarrow A \pmod{65536}$.
-- `OP_SWAP_PC` (`tuuUUuuUUUux`): Atomically exchanges $\text{PC\_CODE} \leftrightarrow \text{PC\_DATA}$.
-- `OP_ADD_PC` (`tuuUUuuUUUuX`): Relative offset displacement: $\text{PC\_CODE} \leftarrow (\text{PC\_CODE} + \Delta) \pmod{65536}$.
-- `OP_XOR_PC` (`tuuUUuuUUUUx`): Bitwise mask: $\text{PC\_CODE} \leftarrow (\text{PC\_CODE} \oplus M) \pmod{65536}$.
+- `OP_SET_PC` (`tuuUUuuUUuUX`): Pops address $A$ and branches: $\mathrm{PC}_{\mathrm{code}} \leftarrow A \pmod{65536}$.
+- `OP_SWAP_PC` (`tuuUUuuUUUux`): Atomically exchanges $\mathrm{PC}_{\mathrm{code}} \leftrightarrow \mathrm{PC}_{\mathrm{data}}$.
+- `OP_ADD_PC` (`tuuUUuuUUUuX`): Relative offset displacement: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} + \Delta) \pmod{65536}$.
+- `OP_XOR_PC` (`tuuUUuuUUUUx`): Bitwise mask: $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} \oplus M) \pmod{65536}$.
 
 ### 4.2. Biological Cellular Degradation
 
@@ -255,19 +255,19 @@ Every execution of a cell increments its `exec_count`. Cellular competence degra
   └────────────┘        └────────────┘        └────────────┘        └────────────┘
 ```
 
-1. **YOUNG ($0 \le \text{exec\_count} < 3$):** Opcode resolves directly through primary decoding table.
-2. **ADULT ($3 \le \text{exec\_count} < 6$):** Instruction decoded with genomic chromosome perturbation:
+1. **YOUNG** (`exec_count` $\in [0, 2]$): Opcode resolves directly through primary decoding table.
+2. **ADULT** (`exec_count` $\in [3, 5]$): Instruction decoded with genomic chromosome perturbation:
    $$\text{opcode} \leftarrow (\text{opcode} \oplus G_1) \pmod{42}$$
-3. **OLD ($6 \le \text{exec\_count} < 9$):** Instruction subjected to ternary Malbolge convolution:
-   $$\text{opcode} \leftarrow \text{tux\_crazy64}(\text{opcode}, G_2) \pmod{42}$$
-4. **DEAD ($\text{exec\_count} \ge 9$):** The cell suffers terminal biological collapse. The cell permanently decodes as `OP_NOP` (`0x29`). The executable footprint cannot execute loops of length $> 8$ without cellular renewal via `OP_CLONE`.
+3. **OLD** (`exec_count` $\in [6, 8]$): Instruction subjected to ternary Malbolge convolution:
+   $$\text{opcode} \leftarrow \mathrm{crazy64}(\text{opcode}, G_2) \pmod{42}$$
+4. **DEAD** (`exec_count` $\ge 9$): The cell suffers terminal biological collapse. The cell permanently decodes as `OP_NOP` (`0x29`). The executable footprint cannot execute loops of length $> 8$ without cellular renewal via `OP_CLONE`.
 
 ### 4.3. Post-Execution Auto-Mutation
 Upon completing an instruction, the cell value is mutated deterministically:
-$$\Delta = \text{tux\_crazy64}(\text{result}, \text{entropy\_pool})$$
+$$\Delta = \mathrm{crazy64}(\mathrm{result}, \mathrm{entropy})$$
 $$\text{cell.val} \leftarrow \text{cell.val} \oplus (\Delta \pmod{256})$$
-$$\text{cell.raw\_code} \leftarrow \text{mutation\_encode}(\text{cell.val}, \text{program\_key}, G_0)$$
-$$\text{cell.flags} \leftarrow \text{cell.flags} \mid \text{TUX\_FLAG\_MUTATED}$$
+$$\mathrm{cell.code} \leftarrow \mathrm{mutate}(\mathrm{cell.val}, K_{\mathrm{prog}}, G_0)$$
+$$\mathrm{cell.flags} \leftarrow \mathrm{cell.flags} \mid \mathrm{FLAG}_{\mathrm{MUTATED}}$$
 
 ---
 
@@ -293,23 +293,23 @@ In Adversarial Mode (`--ADVERSARIAL`, formerly `--APOCALYPSE`), execution shifts
                     └────────────────────────┘
 ```
 
-- **Context A (Primary Agent):** Executes user program starting at $\text{PC\_CODE}_A = 0$, $\text{PC\_DATA}_A = 1024$.
+- **Context A (Primary Agent):** Executes user program starting at $\mathrm{PC}_{\mathrm{code}, A} = 0$, $\mathrm{PC}_{\mathrm{data}, A} = 1024$.
 - **Context B (Shadow Adversary):** Instantiated at a pseudo-random memory boundary derived from program FNV-1a key and genomic chromosome $G_1$:
-  $$\text{PC\_CODE}_B = (\text{program\_key} \oplus G_1) \pmod{65536}$$
-  $$\text{PC\_DATA}_B = (\text{PC\_CODE}_B + 512 + (G_2 \pmod{1024})) \pmod{65536}$$
-  Context B registers and entropy are initialized from the companion `.tu` container. Context B executes concurrently within the shadow region ($prog\_len \dots 65535$), modifying background cells and altering registers.
+  $$\mathrm{PC}_{\mathrm{code}, B} = (K_{\mathrm{prog}} \oplus G_1) \pmod{65536}$$
+  $$\mathrm{PC}_{\mathrm{data}, B} = (\mathrm{PC}_{\mathrm{code}, B} + 512 + (G_2 \pmod{1024})) \pmod{65536}$$
+  Context B registers and entropy are initialized from the companion `.tu` container. Context B executes concurrently within the shadow region (`prog_len` $\dots 65535$), modifying background cells and altering registers.
 
 ### 5.1. Deterministic Scheduler Metric
 Context switching does not rely on OS preemption. At each machine cycle, the scheduler computes an entropy metric over active memory and hardware registers:
-$$\mu = \text{FNV-1a}(\text{active\_ctx.regs}) \oplus \text{mem}[\text{PC\_CODE}].\text{val} \oplus \text{step\_counter}$$
+$$\mu = \mathrm{FNV1a}(\vec{R}) \oplus \mathrm{mem}[\mathrm{PC}].\mathrm{val} \oplus \mathrm{step}$$
 $$\text{Active Context} \leftarrow \begin{cases} \text{Context A}, & \text{if } (\mu \oplus G_0) \pmod 2 = 0 \\ \text{Context B}, & \text{if } (\mu \oplus G_0) \pmod 2 = 1 \end{cases}$$
 
 ### 5.2. Differential Register Coupling
 Registers $R_0 \dots R_3$ are interconnected across a non-linear feedback loop evaluated at each clock cycle:
-$$\delta_1 = \text{tux\_crazy64}(R_0, R_1) \pmod{256}, \quad R_1 \leftarrow R_1 + \delta_1$$
-$$\delta_2 = \text{tux\_crazy64}(R_1, R_2) \pmod{256}, \quad R_2 \leftarrow R_2 + \delta_2$$
-$$\delta_3 = \text{tux\_crazy64}(R_2, R_3) \pmod{256}, \quad R_3 \leftarrow R_3 + \delta_3$$
-$$\delta_0 = \text{tux\_crazy64}(R_3, R_0) \pmod{256}, \quad R_0 \leftarrow R_0 \oplus \delta_0$$
+$$\delta_1 = \mathrm{crazy64}(R_0, R_1) \pmod{256}, \quad R_1 \leftarrow R_1 + \delta_1$$
+$$\delta_2 = \mathrm{crazy64}(R_1, R_2) \pmod{256}, \quad R_2 \leftarrow R_2 + \delta_2$$
+$$\delta_3 = \mathrm{crazy64}(R_2, R_3) \pmod{256}, \quad R_3 \leftarrow R_3 + \delta_3$$
+$$\delta_0 = \mathrm{crazy64}(R_3, R_0) \pmod{256}, \quad R_0 \leftarrow R_0 \oplus \delta_0$$
 
 ### 5.3. Thermodynamic Time Debt
 Instructions accumulate an entropy debt `time_debt`:
@@ -317,7 +317,7 @@ Instructions accumulate an entropy debt `time_debt`:
 - Complex non-linear instructions (`CRAZY`, `CAST`): $+1 + (\text{entropy} \pmod 3)$
 - Cellular clone (`CLONE`): $+5$
 
-If $\text{time\_debt} > 5000$, memory corruption occurs. The debt must be liquidated via `OP_PAY_TIME` at the cost of execution fuel (`gas_budget`).
+If `time_debt` $> 5000$, memory corruption occurs. The debt must be liquidated via `OP_PAY_TIME` at the cost of execution fuel (`gas_budget`).
 
 ---
 
@@ -332,7 +332,7 @@ Variables and cellular units adhere to strict affine typing:
 The operand evaluation stack enforces a dynamic gravity constraint:
 - Consecutive push operations increase stack tension.
 - If more than 7 push instructions occur without an intervening arithmetic, reduction, or pop operation, stack gravity collapses:
-  $$\text{depth} > 7 \implies \text{PANIC\_STACK\_GRAVITY\_OVERFLOW (Exit Code 3)}$$
+  $$\mathrm{depth} > 7 \implies \text{Stack Gravity Overflow [Exit Code 3]}$$
 
 ### 6.3. Balanced 64-Bit Ternary CRAZY Logic
 TuxPL embeds a 64-bit extension of the Malbolge ternary operation across 40 trits ($3^{40}$ space):
@@ -368,7 +368,7 @@ TuxPL 2.0.0 defines exactly 42 opcodes ($0 \dots 41$).
 | `10`| `OP_STORE` | `TuU<bits>x` | Stores top of stack into `vars[N]` |
 | `11`| `OP_LOADIND` | `TuU<bits>X` | Reads `mem[PC_DATA + offset]` |
 | `12`| `OP_STOREIND`| `TUu<bits>x` | Writes `mem[PC_DATA + offset] = val` |
-| `13`| `OP_JMP` | `TUu<bits>X` | Sets $\text{PC\_CODE} \leftarrow N$ |
+| `13`| `OP_JMP` | `TUu<bits>X` | Sets $\mathrm{PC}_{\mathrm{code}} \leftarrow N$ |
 | `14`| `OP_JZ` | `TUU<bits>x` | Conditional branch if $a == 0$ |
 | `15`| `OP_JNZ` | `TUU<bits>X` | Conditional branch if $a \neq 0$ |
 | `16`| `OP_CMP` | `tuu<bits>X` | $a, b \to \text{sgn}(a - b) \in \{-1, 0, 1\}$ |
@@ -386,10 +386,10 @@ TuxPL 2.0.0 defines exactly 42 opcodes ($0 \dots 41$).
 | `28`| `OP_CAST` | `tuu<bits>x` | Explicit re-tagging of numeric type |
 | `29`| `OP_DIR` | `tuuUUuuUuUx` | Reverses evaluation stack direction |
 | `30`| `OP_PUSH_PC` | `tuuUUuuUUuUx`| Pushes current `PC_CODE` |
-| `31`| `OP_SET_PC` | `tuuUUuuUUuUX`| $\text{PC\_CODE} \leftarrow a \pmod{65536}$ |
-| `32`| `OP_SWAP_PC` | `tuuUUuuUUUux`| $\text{PC\_CODE} \leftrightarrow \text{PC\_DATA}$ |
-| `33`| `OP_ADD_PC` | `tuuUUuuUUUuX`| $\text{PC\_CODE} \leftarrow (\text{PC\_CODE} + \Delta) \pmod{65536}$ |
-| `34`| `OP_XOR_PC` | `tuuUUuuUUUUx`| $\text{PC\_CODE} \leftarrow (\text{PC\_CODE} \oplus M) \pmod{65536}$ |
+| `31`| `OP_SET_PC` | `tuuUUuuUUuUX`| $\mathrm{PC}_{\mathrm{code}} \leftarrow a \pmod{65536}$ |
+| `32`| `OP_SWAP_PC` | `tuuUUuuUUUux`| $\mathrm{PC}_{\mathrm{code}} \leftrightarrow \mathrm{PC}_{\mathrm{data}}$ |
+| `33`| `OP_ADD_PC` | `tuuUUuuUUUuX`| $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} + \Delta) \pmod{65536}$ |
+| `34`| `OP_XOR_PC` | `tuuUUuuUUUUx`| $\mathrm{PC}_{\mathrm{code}} \leftarrow (\mathrm{PC}_{\mathrm{code}} \oplus M) \pmod{65536}$ |
 | `35`| `OP_CLONE` | `tuuUUuuUUUUX`| Clones cell to address with generation increment |
 | `36`| `OP_DECAY` | `tuuUUuUUuuux`| Manually ages cell by $+1$ generation |
 | `37`| `OP_WAKE` | `tuuUUuUUuuuX`| Clears `TUX_FLAG_DORMANT` flag at target cell |
