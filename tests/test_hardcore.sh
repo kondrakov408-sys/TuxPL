@@ -113,56 +113,51 @@ with open(os.path.join(tmp, 'manifest.sh'), 'w') as mf:
 
 . "$TMP_DIR/manifest.sh"
 
-# Тест 1: Базовый запуск Purgatory программы
-check purgatory_hi "Hi" env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_HI"
+# Тест 1: Базовый запуск программы в режиме Unified VM
+check purgatory_hi "Hi" ./tuxpl "$TMP_DIR/$F_HI"
 
-# Тест 2: Русская рулетка (TUX_LUCKY=0 сносит файл)
-ROULETTE_DIR=$(mktemp -d -p "$TMP_DIR")
-ln -s "$(pwd)/Tux" "$ROULETTE_DIR/Tux"
-cp "$TMP_DIR/$F_HI" "$ROULETTE_DIR/$F_HI"
-
-if env TUX_LUCKY=0 TUX_CPU_TEMP=35.0 ./tuxpl "$ROULETTE_DIR/$F_HI" >/dev/null 2>&1; then
-    fail=$((fail + 1))
-    echo "  [FAIL] roulette_death: программа выжила при TUX_LUCKY=0"
+# Тест 2: Гарантированное падение по PANIC_BUDGET_EXHAUSTION при нулевом газе
+set +e
+env TUX_GAS_BUDGET=0 ./tuxpl "$TMP_DIR/$F_HI" >/dev/null 2>&1
+rc=$?
+set -e
+if [ "$rc" -eq 3 ]; then
+    pass=$((pass + 1))
+    echo "  [PASS] zero_gas_budget_exhaustion (код возврата: 3, PANIC_BUDGET_EXHAUSTION)"
 else
-    if [ -f "$ROULETTE_DIR/$F_HI" ]; then
-        fail=$((fail + 1))
-        echo "  [FAIL] roulette_death: файл не был удален при провале рулетки"
-    else
-        pass=$((pass + 1))
-        echo "  [PASS] roulette_death (файл уничтожен согласно канону)"
-    fi
+    fail=$((fail + 1))
+    echo "  [FAIL] zero_gas_budget_exhaustion: ожидали код 3, получили $rc"
 fi
 
-# Тест 3: Глобальное потепление (температура >75 C)
-expect_troll global_warming env TUX_LUCKY=1 TUX_CPU_TEMP=80.0 ./tuxpl "$TMP_DIR/$F_HI"
+# Тест 3: Запуск через академический первичный флаг --UNIFIED-VM
+check unified_vm_mode "Hi" ./tuxpl --UNIFIED-VM "$TMP_DIR/$F_HI"
 
 # Тест 4: Обрушение стека от гравитации (>7 pushes)
-expect_troll stack_avalanche env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_AVA"
+expect_troll stack_avalanche ./tuxpl "$TMP_DIR/$F_AVA"
 
 # Тест 5: Borrow Checker (Use-after-move)
-expect_troll use_after_move env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_BOR"
+expect_troll use_after_move ./tuxpl "$TMP_DIR/$F_BOR"
 
 # Тест 6: Аппаратные регистры (Tu = RAX аккумулятор)
-check hw_registers "42" env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_REG"
+check hw_registers "42" ./tuxpl "$TMP_DIR/$F_REG"
 
 # Тест 7: Троичная CRAZY операция (Malbolge)
-check crazy_op "29523" env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_CRZ"
+check crazy_op "29523" ./tuxpl "$TMP_DIR/$F_CRZ"
 
 # Тест 8: Несовпадение строгих типов
-expect_troll type_mismatch env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_TBAD"
+expect_troll type_mismatch ./tuxpl "$TMP_DIR/$F_TBAD"
 
 # Тест 9: Явный кастинг типа (CAST)
-check type_cast "1010" env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_TGOOD"
+check type_cast "1010" ./tuxpl "$TMP_DIR/$F_TGOOD"
 
-# Тест 10: Голод Тукса (налог на рыбу исчерпан)
-expect_troll fish_starvation env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_STARVE"
+# Тест 10: Исчерпание метаболического бюджета газа
+expect_troll gas_starvation ./tuxpl "$TMP_DIR/$F_STARVE"
 
-# Тест 11: Кормление Тукса рыбой (OP_FISH)
-check fish_replenished "" env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_REPL"
+# Тест 11: Восполнение метаболического газа (OP_FISH / OP_REPLENISH_GAS)
+check gas_replenished "" ./tuxpl "$TMP_DIR/$F_REPL"
 
 # Тест 12: Нарушение невидимой Whitespace-четности
-expect_troll whitespace_tampered env TUX_LUCKY=1 TUX_CPU_TEMP=35.0 ./tuxpl "$TMP_DIR/$F_TAMP"
+expect_troll whitespace_tampered ./tuxpl "$TMP_DIR/$F_TAMP"
 
 echo "======================================================="
 echo "Хардкорные тесты: OK: $pass, FAIL: $fail"

@@ -213,7 +213,7 @@ void gbsv_verify_line_or_die(const char *curr_line, size_t curr_len,
     GbsvSignature actual_sig;
 
     if (!gbsv_parse_terminator(curr_line, curr_len, &N_curr, &actual_sig)) {
-        troll_die(TR_GBSV_SYNTAX);
+        vm_panic(PANIC_GBSV_SYNTAX, "Malformed GBSV terminator format :[<B64>|<GF>|<TUX>];<OP>}");
     }
 
     const uint8_t *P_curr = (const uint8_t *)curr_line;
@@ -238,15 +238,15 @@ void gbsv_verify_line_or_die(const char *curr_line, size_t curr_len,
     GbsvSignature expected_sig = gbsv_calculate(P_curr, N_curr, P_prev, N_prev);
 
     if (actual_sig.b64 != expected_sig.b64) {
-        troll_die(TR_GBSV_B64);
+        vm_panic(PANIC_GBSV_B64, "Base64 projection mismatch: actual '%c' != expected '%c'", actual_sig.b64, expected_sig.b64);
     }
     if (actual_sig.gf != expected_sig.gf) {
-        troll_die(TR_GBSV_GF);
+        vm_panic(PANIC_GBSV_GF, "Galois field F_{2^8} syndrome mismatch: actual '%c' != expected '%c'", actual_sig.gf, expected_sig.gf);
     }
     if (actual_sig.tux != expected_sig.tux) {
-        troll_die(TR_GBSV_TUX);
+        vm_panic(PANIC_GBSV_TUX, "p-adic weighted valuation mismatch: actual '%c' != expected '%c'", actual_sig.tux, expected_sig.tux);
     }
     if (actual_sig.zeta != expected_sig.zeta) {
-        troll_die(TR_GBSV_ZETA);
+        vm_panic(PANIC_GBSV_ZETA, "Hamming collapse quantum operator mismatch: actual '%c' != expected '%c'", actual_sig.zeta, expected_sig.zeta);
     }
 }

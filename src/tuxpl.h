@@ -170,12 +170,18 @@ typedef struct {
     ProgramFingerprint fp;
 } Program;
 
+#include "diag.h"
+
 /* Режимы исполнения VM */
 typedef enum {
     TUX_MODE_CLASSIC,
-    TUX_MODE_CURSED,
-    TUX_MODE_PURGATORY,
-    TUX_MODE_APOCALYPSE
+    TUX_MODE_STRICT,
+    TUX_MODE_UNIFIED_VM,
+    TUX_MODE_ADVERSARIAL,
+    /* Совместимость со старыми алиасами */
+    TUX_MODE_CURSED = TUX_MODE_STRICT,
+    TUX_MODE_PURGATORY = TUX_MODE_UNIFIED_VM,
+    TUX_MODE_APOCALYPSE = TUX_MODE_ADVERSARIAL
 } TuxMode;
 
 typedef struct {
@@ -185,66 +191,10 @@ typedef struct {
     int is_trace;
     int is_trace_state;
     int is_gbsv;
-    int yolo_nuke;
     const char *filepath;
     const char *companion_path;
 } TuxVMConfig;
 
-/* Категории ошибок troll.c */
-enum {
-    TR_GARBAGE,
-    TR_OPEN,
-    TR_SPACE1,
-    TR_SEP,
-    TR_END,
-    TR_SIX,
-    TR_EMPTYLINE,
-    TR_EMPTYFILE,
-    TR_OVERFLOW,
-    TR_STACK,
-    TR_DIVZERO,
-    TR_MEMRANGE,
-    TR_LISTRANGE,
-    TR_BADJUMP,
-    TR_BADINPUT,
-    TR_CURSED_NAME,
-    TR_CURSED_WEEKEND,
-    TR_CURSED_NON_ARCH,
-    TR_CURSED_NO_LIB,
-    TR_CURSED_LINE_CYCLE,
-    TR_CURSED_SYNTAX,
-    TR_CURSED_CHECKSUM,
-    TR_MATH_DEATH,
-    TR_ROULETTE_DEATH,
-    TR_GLOBAL_WARMING,
-    TR_STARVATION,
-    TR_AVALANCHE,
-    TR_USE_AFTER_MOVE,
-    TR_TYPE_MISMATCH,
-    TR_WHITESPACE_TAMPERED,
-    /* TuxPL 2.0.0 новые категории */
-    TR_DECODE,
-    TR_MUTATION,
-    TR_PARADOX,
-    TR_GENOME,
-    TR_AGE,
-    TR_ORPHAN,
-    TR_HERESY,
-    TR_NO_HISTORY,
-    TR_DORMANT,
-    TR_EXECUTION,
-    /* GBSV категории */
-    TR_GBSV_SYNTAX,
-    TR_GBSV_B64,
-    TR_GBSV_GF,
-    TR_GBSV_TUX,
-    TR_GBSV_ZETA,
-    TR_CAT_COUNT
-};
-
-/* troll.c */
-void troll_die(int cat);
-void troll_debug(const char *msg);
 
 /* genome.c — детерминированная математика, хэширование и эволюция */
 uint64_t tux_crazy64(uint64_t a, uint64_t b);

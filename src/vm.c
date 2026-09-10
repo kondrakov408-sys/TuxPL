@@ -207,7 +207,9 @@ static void run_cursed(const Program *prog) {
     size_t pc = 0;
 
     int is_purg = prog->is_purgatory;
-    int fish_grams = 100;
+    int gas_budget = 100;
+    const char *env_gas = getenv("TUX_GAS_BUDGET");
+    if (env_gas) gas_budget = atoi(env_gas);
     int consecutive_pushes = 0;
     int64_t regs[4] = {0, 0, 0, 0};
     int reg_tags[4] = {0, 0, 0, 0};
@@ -219,8 +221,8 @@ static void run_cursed(const Program *prog) {
         const Cmd *c = &prog->cmds[pc];
 
         if (is_purg) {
-            fish_grams--;
-            if (fish_grams < 0) troll_die(TR_STARVATION);
+            gas_budget--;
+            if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Operational metabolic gas budget exhausted");
         }
 
         switch (c->op) {
@@ -354,8 +356,8 @@ static void run_cursed(const Program *prog) {
         }
         case OP_FISH: {
             int add = (c->arg > 0 && c->arg <= 10000) ? (int)c->arg : 50;
-            fish_grams += add;
-            if (fish_grams > 100000) fish_grams = 100000;
+            gas_budget += add;
+            if (gas_budget > 100000) gas_budget = 100000;
             break;
         }
         case OP_CRAZY: {
@@ -537,7 +539,9 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
     uint64_t step_counter = 0;
     size_t active_code_count = prog->len;
     uint8_t current_width = 1;
-    int fish_grams = 500;
+    int gas_budget = 500;
+    const char *env_gas_purg = getenv("TUX_GAS_BUDGET");
+    if (env_gas_purg) gas_budget = atoi(env_gas_purg);
     Vec vars = {0, 0, 0};
     Vec vars_tags = {0, 0, 0};
     Lists lists = {0, 0, 0};
@@ -577,8 +581,8 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             tux_genome_evolve(&genome, -1, entropy.pool, act->regs, pc);
         }
 
-        fish_grams--;
-        if (fish_grams < 0) troll_die(TR_STARVATION);
+        gas_budget--;
+        if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Operational metabolic gas budget exhausted");
 
         /* Снимок для UNDO / --REVERSIBLE */
         TuxHistoryEntry h_entry;
@@ -652,7 +656,7 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             if (inst.op == OP_PUSH && act->consecutive_pushes >= 7) {
                 inst.op = OP_NOP;
             }
-            if (inst.op == OP_PAY_TIME && fish_grams < 10) {
+            if (inst.op == OP_PAY_TIME && gas_budget < 10) {
                 inst.op = OP_NOP;
             }
         }
@@ -779,8 +783,8 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
         }
         case OP_FISH: {
             int add = (inst.arg > 0 && inst.arg <= 10000) ? (int)inst.arg : 50;
-            fish_grams += add;
-            if (fish_grams > 100000) fish_grams = 100000;
+            gas_budget += add;
+            if (gas_budget > 100000) gas_budget = 100000;
             break;
         }
         case OP_CRAZY: {
@@ -955,8 +959,8 @@ static void run_unified_vm(const Program *prog, const TuxVMConfig *config) {
             uint64_t pay = time_debt.accumulated_debt > 50 ? 50 : time_debt.accumulated_debt;
             time_debt.accumulated_debt -= pay;
             time_debt.paid_total += pay;
-            fish_grams -= 10;
-            if (fish_grams < 0) troll_die(TR_STARVATION);
+            gas_budget -= 10;
+            if (gas_budget < 0) vm_panic(PANIC_BUDGET_EXHAUSTION, "Metabolic gas budget exhausted during temporal debt payment");
             break;
         }
         case OP_NOP:

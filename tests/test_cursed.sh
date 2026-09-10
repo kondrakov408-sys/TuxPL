@@ -38,8 +38,8 @@ TMP_DIR=$(mktemp -d)
 cp examples/1840.tux "$TMP_DIR/wrong_name.tux"
 expect_troll_cursed name_mismatch ./tuxpl "$TMP_DIR/wrong_name.tux"
 
-# 3. Тест: не-Arch Linux
-expect_troll_cursed non_arch env TUX_FAKE_OS=debian ./tuxpl examples/1840.tux
+# 3. Тест: отказ при нарушении спецификации GBSV в строгом режиме (--gbsv)
+expect_troll_cursed gbsv_spec_failure ./tuxpl --gbsv examples/1840.tux
 
 # 4. Тест: нарушение синтаксиса скобок (убрали тильду)
 sed 's/~"TUX"/"TUX"/g' examples/1840.tux > "$TMP_DIR/bad_syntax.tux"
@@ -74,14 +74,18 @@ CYC_BITS=$((CYC_SZ * 8))
 mv "$TMP_DIR/cycle.tux" "$TMP_DIR/${CYC_BITS}.tux"
 expect_troll_cursed line_cycle ./tuxpl "$TMP_DIR/${CYC_BITS}.tux"
 
-# 8. Тест математической казни в режиме --PLS (файл должен быть удален)
-printf '{: TuuX;\n' > "$TMP_DIR/victim.tux"
-printf '999999\n' | ./tuxpl --PLS "$TMP_DIR/victim.tux" >/dev/null 2>&1 || true
-if [ ! -f "$TMP_DIR/victim.tux" ]; then
-    pass=$((pass + 1))
-else
+# 8. Тест безопасного отказа: деление на ноль завершается с кодом 1 без удаления файла
+printf '{: Tuux  TuuUx   TUX;\n' > "$TMP_DIR/victim.tux"
+if ./tuxpl --CLASSIC "$TMP_DIR/victim.tux" >/dev/null 2>&1; then
     fail=$((fail + 1))
-    echo "FAIL math_death: файл жертвы не был удален!"
+    echo "FAIL safe_failure: ожидался сбой деления на ноль"
+else
+    if [ -f "$TMP_DIR/victim.tux" ]; then
+        pass=$((pass + 1))
+    else
+        fail=$((fail + 1))
+        echo "FAIL safe_failure: файл был удален!"
+    fi
 fi
 
 rm -rf "$TMP_DIR"

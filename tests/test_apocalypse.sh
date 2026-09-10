@@ -61,29 +61,29 @@ expect_exit_code mode_exclusivity 2 ./tuxpl --CLASSIC --APOCALYPSE examples/hi.t
 # 2. Тест полиморфного анти-дизассемблера (--DISASM)
 expect_troll_msg disasm_output "Polymorphic Anti-Disassembler" ./tuxpl --DISASM examples/self_modify.tux
 
-# 3. Companion файл: сирота (TR_ORPHAN)
-expect_troll_msg companion_orphan "companion|\.tu" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --APOCALYPSE --companion "$TMP_DIR/missing.tu" examples/apocalypse.tux
+# 3. Companion файл: сирота (PANIC_COMPANION_ORPHAN)
+expect_troll_msg companion_orphan "companion|\.tu" ./tuxpl --APOCALYPSE --companion "$TMP_DIR/missing.tu" examples/apocalypse.tux
 
-# 4. Companion файл: ересь / подделка контрольной суммы (TR_HERESY)
+# 4. Companion файл: ересь / подделка контрольной суммы (PANIC_COMPANION_HERESY)
 head -c 88 /dev/urandom > "$TMP_DIR/bad.tu"
-expect_troll_msg companion_heresy "companion|спутник|ерес|TUX2" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --APOCALYPSE --companion "$TMP_DIR/bad.tu" examples/apocalypse.tux
+expect_troll_msg companion_heresy "companion|спутник|ерес|TUX2" ./tuxpl --APOCALYPSE --companion "$TMP_DIR/bad.tu" examples/apocalypse.tux
 
 # 5. Purgatory Self-Modifying Memory Execution
-check self_modify "42" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --PURGATORY examples/self_modify.tux
+check self_modify "42" ./tuxpl --PURGATORY examples/self_modify.tux
 
 # 6. Purgatory Dual PC & Code-as-Data
-check code_as_data "0" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --PURGATORY examples/code_as_data.tux
+check code_as_data "0" ./tuxpl --PURGATORY examples/code_as_data.tux
 
 # 7. Reversible Mode & OP_UNDO (успешный откат состояния памяти)
-check reversible_undo "39112908095360031" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --PURGATORY --REVERSIBLE examples/undo.tux
+check reversible_undo "39112908095360031" ./tuxpl --PURGATORY --REVERSIBLE examples/undo.tux
 
-# 8. OP_UNDO без флага --REVERSIBLE должен падать с TR_NO_HISTORY
-expect_troll_msg undo_without_flag "истори|откат|времени" env TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1 ./tuxpl --PURGATORY examples/undo.tux
+# 8. OP_UNDO без флага --REVERSIBLE должен падать с PANIC_SPEC_NO_HISTORY
+expect_troll_msg undo_without_flag "PANIC_SPEC_NO_HISTORY|истори|откат|времени" ./tuxpl --PURGATORY examples/undo.tux
 
 # 9. Детерминированная воспроизводимость 100% при фиксированном окружении
 RUN1="$TMP_DIR/run1.log"
 RUN2="$TMP_DIR/run2.log"
-ENV_FIXED="TUX_TIME=1700000000 TUX_ENTROPY_SEED=42 TUX_GENOME=12345 TUX_CPU_TEMP=45.0 TUX_LUCKY=1 TUX_FORCE_ARCH=1 TUX_WAKE_UP=1"
+ENV_FIXED="TUX_ENTROPY_SEED=42 TUX_GENOME=12345"
 env $ENV_FIXED ./tuxpl --APOCALYPSE --TRACE-STATE examples/apocalypse.tux > "$RUN1" 2>&1 || true
 env $ENV_FIXED ./tuxpl --APOCALYPSE --TRACE-STATE examples/apocalypse.tux > "$RUN2" 2>&1 || true
 

@@ -39,17 +39,17 @@ void tux_clone_cell(
     size_t *active_code_count
 ) {
     if (*active_code_count >= TUX_MAX_ACTIVE_CODE) {
-        troll_die(TR_MEMRANGE);
+        vm_panic(PANIC_MUTATION_COLLAPSE, "Active executable code cell limit (%d) exceeded", TUX_MAX_ACTIVE_CODE);
     }
 
     TuxCell *src = &mem[src_addr];
     TuxCell *dst = &mem[dst_addr];
 
-    /* Насыщение поколения и ошибка TR_AGE */
+    /* Насыщение поколения и ошибка PANIC_SPEC_AGE_LIMIT */
     if (src->gen == 255) {
         dst->gen = 255;
         dst->flags |= TUX_FLAG_CORRUPTED;
-        troll_die(TR_AGE);
+        vm_panic(PANIC_SPEC_AGE_LIMIT, "Instruction cell generation limit (255) reached at address 0x%04X", src_addr);
     }
 
     dst->val = src->val;

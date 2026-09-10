@@ -1,8 +1,8 @@
 CC     ?= cc
 CFLAGS ?= -std=c99 -Wall -Wextra -O2
 
-SRC = src/main.c src/parse.c src/vm.c src/troll.c src/genome.c src/state.c src/decoder.c src/mutation.c src/scheduler.c src/gbsv.c
-HDR = src/tuxpl.h src/gbsv.h
+SRC = src/main.c src/parse.c src/vm.c src/diag.c src/genome.c src/state.c src/decoder.c src/mutation.c src/scheduler.c src/gbsv.c
+HDR = src/tuxpl.h src/gbsv.h src/diag.h
 
 tuxpl: $(SRC) $(HDR)
 	$(CC) $(CFLAGS) -o $@ $(SRC)
@@ -15,7 +15,7 @@ test: tuxpl test-gbsv
 	sh tests/test_apocalypse.sh
 
 test-gbsv:
-	$(CC) $(CFLAGS) -o tests/test_gbsv tests/test_gbsv.c src/gbsv.c src/troll.c
+	$(CC) $(CFLAGS) -o tests/test_gbsv tests/test_gbsv.c src/gbsv.c src/diag.c
 	./tests/test_gbsv
 	rm -f tests/test_gbsv
 
