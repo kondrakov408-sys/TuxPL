@@ -1,0 +1,4 @@
+tuxpl
+*.o
+__pycache__/
+*.pyc
